@@ -1,0 +1,237 @@
+{
+  "seed": 12345,
+  "durationFrames": 1800,
+  "inputs": [
+    {
+      "frame": 5,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 6,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 7,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 8,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 9,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 10,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 11,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 12,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 13,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 14,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 15,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 16,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 17,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 18,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 19,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 20,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 21,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 22,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 23,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 24,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 25,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 26,
+      "action": "plunger",
+      "phase": "up"
+    },
+    {
+      "frame": 100,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 115,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 180,
+      "action": "flipper_right",
+      "phase": "down"
+    },
+    {
+      "frame": 195,
+      "action": "flipper_right",
+      "phase": "up"
+    },
+    {
+      "frame": 300,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 315,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 450,
+      "action": "flipper_right",
+      "phase": "down"
+    },
+    {
+      "frame": 465,
+      "action": "flipper_right",
+      "phase": "up"
+    },
+    {
+      "frame": 600,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 615,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 750,
+      "action": "flipper_right",
+      "phase": "down"
+    },
+    {
+      "frame": 765,
+      "action": "flipper_right",
+      "phase": "up"
+    },
+    {
+      "frame": 900,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 915,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 1050,
+      "action": "flipper_right",
+      "phase": "down"
+    },
+    {
+      "frame": 1065,
+      "action": "flipper_right",
+      "phase": "up"
+    },
+    {
+      "frame": 1200,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1215,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 1350,
+      "action": "flipper_right",
+      "phase": "down"
+    },
+    {
+      "frame": 1365,
+      "action": "flipper_right",
+      "phase": "up"
+    },
+    {
+      "frame": 1500,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1515,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 1650,
+      "action": "flipper_right",
+      "phase": "down"
+    },
+    {
+      "frame": 1665,
+      "action": "flipper_right",
+      "phase": "up"
+    }
+  ],
+  "expectedHash": "1ff21ad4"
+}

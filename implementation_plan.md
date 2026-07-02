@@ -116,38 +116,38 @@ M0 (Scaffold + P0 Spikes)
 **Estimate:** ~6 d
 
 ### 0.1 Repository & Toolchain
-- `[ ]` **[NEW]** Repository Scaffold — package.json (Vite + TS + Phaser + Rapier + Electron + Jest/ts-jest + scripts: dev, lint, typecheck, test) and Git LFS config (`.gitattributes`) to track `.png` and `.wav` binaries **(S, 0.5d)**
-- `[ ]` **[NEW]** `tsconfig.json`, `vite.config.ts`, `.eslintrc.ts` (simulation boundary) **(S, 0.5d)**
-- `[ ]` **[NEW]** `electron/main.ts` & `preload.ts` **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/main.ts` & `application.ts` — stubs for `SaveSystem` / `SettingsSystem` **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/core/StorageProvider.ts` — StorageProvider core interface definition **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/types/input.ts` — Typed InputBuffer schema definition (`{ frame: number, action: string, phase: "down" | "up" | "value", value?: number }` to capture flippers, plunger, and analog inputs) **(S, 0.25d)**
-- `[ ]` **[NEW]** `.github/workflows/ci.yml` — lint, typecheck, Jest (no replay-ci yet) **(S, 0.25d)**
+- `[x]` **[NEW]** Repository Scaffold — package.json (Vite + TS + Phaser + Rapier + Electron + Jest/ts-jest + scripts: dev, lint, typecheck, test) and Git LFS config (`.gitattributes`) to track `.png` and `.wav` binaries **(S, 0.5d)**
+- `[x]` **[NEW]** `tsconfig.json`, `vite.config.ts`, `.eslintrc.ts` (simulation boundary) **(S, 0.5d)**
+- `[x]` **[NEW]** `electron/main.ts` & `preload.ts` **(S, 0.25d)**
+- `[x]` **[NEW]** `src/main.ts` & `application.ts` — stubs for `SaveSystem` / `SettingsSystem` **(S, 0.25d)**
+- `[x]` **[NEW]** `src/core/StorageProvider.ts` — StorageProvider core interface definition **(S, 0.25d)**
+- `[x]` **[NEW]** `src/types/input.ts` — Typed InputBuffer schema definition (`{ frame: number, action: string, phase: "down" | "up" | "value", value?: number }` to capture flippers, plunger, and analog inputs) **(S, 0.25d)**
+- `[x]` **[NEW]** `.github/workflows/ci.yml` — lint, typecheck, Jest (no replay-ci yet) **(S, 0.25d)**
 
 ### 0.2 Physics Feel Spike (TDD §16 Q2)
-- `[ ]` **[NEW]** `src/spikes/flipper-feel/FlipperSpike.ts` — Spike verdict must measure max motor torque, compare response latency side-by-side with a real pinball reference, and rate impact satisfaction on a 1–5 scale. Flipper feel sign-off requires rating >= 4. **(M, 1.0d)**
-- `[ ]` **[NEW]** `docs/spikes/flipper-feel-verdict.md` **(S, 0.25d)**
+- `[x]` **[NEW]** `src/spikes/flipper-feel/FlipperSpike.ts` — Spike verdict must measure max motor torque, compare response latency side-by-side with a real pinball reference, and rate impact satisfaction on a 1–5 scale. Flipper feel sign-off requires rating >= 4. **(M, 1.0d)**
+- `[x]` **[NEW]** `docs/spikes/flipper-feel-verdict.md` **(S, 0.25d)**
 
 ### 0.3 Coordinate System Spike (TDD §16 Q1)
-- `[ ]` **[NEW]** `src/simulation/constants.ts` — `PIXELS_PER_METRE`, grid, checkpoint interval, Fall Floor offset, seeded RNG constants (mulberry32 seed configuration), and dynamic chunking bounds **(S, 0.5d)**
-- `[ ]` **[NEW]** `docs/spikes/coordinate-system.md` — Defines chunking boundaries and seeded RNG parameters **(S, 0.25d)**
+- `[x]` **[NEW]** `src/simulation/constants.ts` — `PIXELS_PER_METRE`, grid, checkpoint interval, Fall Floor offset, seeded RNG constants (mulberry32 seed configuration), and dynamic chunking bounds **(S, 0.5d)**
+- `[x]` **[NEW]** `docs/spikes/coordinate-system.md` — Defines chunking boundaries and seeded RNG parameters **(S, 0.25d)**
 
 ### 0.4 WASM Init Spike (TDD §16 Q3)
-- `[ ]` **[NEW]** `src/spikes/wasm-init/WasmInitSpike.ts` — Spike WASM compilation and initialization within the Electron container **(S, 0.5d)**
-- `[ ]` **[NEW]** `docs/spikes/wasm-init-verdict.md` — Define Apple Silicon target cold-start success criteria < 200ms **(S, 0.25d)**
+- `[x]` **[NEW]** `src/spikes/wasm-init/WasmInitSpike.ts` — Spike WASM compilation and initialization within the Electron container **(S, 0.5d)**
+- `[x]` **[NEW]** `docs/spikes/wasm-init-verdict.md` — Define Apple Silicon target cold-start success criteria < 200ms **(S, 0.25d)**
 
 ### 0.5 Fall Floor Collision Spike (TDD §16 Q7)
-- `[ ]` **[NEW]** `src/spikes/fall-floor/FallFloorSpike.ts` — Test Rapier collision groups vs sensor+impulse for one-way platform catch behavior **(S, 0.5d)**
-- `[ ]` **[NEW]** `docs/spikes/fall-floor-verdict.md` — Chosen Rapier approach **(S, 0.25d)**
+- `[x]` **[NEW]** `src/spikes/fall-floor/FallFloorSpike.ts` — Test Rapier collision groups vs sensor+impulse for one-way platform catch behavior **(S, 0.5d)**
+- `[x]` **[NEW]** `docs/spikes/fall-floor-verdict.md` — Chosen Rapier approach **(S, 0.25d)**
 
 ### 0.6 Rapier Version Bump Protocol
-- `[ ]` **[NEW]** `docs/rapier-version-bump-protocol.md` & `npm run rapier-bump-check` — Define the regression protocol and write regression script re-simulating golden replay hashes against new Rapier version in CI **(S, 0.75d)**
+- `[x]` **[NEW]** `docs/rapier-version-bump-protocol.md` & `npm run rapier-bump-check` — Define the regression protocol and write regression script re-simulating golden replay hashes against new Rapier version in CI **(S, 0.75d)**
 
 ### M0 Exit Criteria
-- [ ] `npm run lint && npm run typecheck && npm test` pass.
-- [ ] Electron opens Phaser boot scene.
-- [ ] Six spike/protocol docs merged; `PIXELS_PER_METRE` committed.
-- [ ] Team sign-off on flipper feel (verdict subjective rating >= 4).
+- [x] `npm run lint && npm run typecheck && npm test` pass.
+- [x] Electron opens Phaser boot scene.
+- [x] Six spike/protocol docs merged; `PIXELS_PER_METRE` committed.
+- [x] Team sign-off on flipper feel (verdict subjective rating >= 4).
 
 ---
 
@@ -158,37 +158,37 @@ M0 (Scaffold + P0 Spikes)
 **Estimate:** ~11 d
 
 ### 1.1 Simulation Layer
-- `[ ]` **[NEW]** `src/simulation/events.ts` + `EventBus.ts` **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/simulation/PhysicsWorld.ts` — Fixed 1/60 s step; CCD on ball; `getBodyCount()` for perf tests **(S, 0.75d)**
-- `[ ]` **[NEW]** `src/simulation/Simulation.ts` — Fixed-step loop; `mulberry32` seeded RNG (never `Math.random()`) **(S, 0.75d)**
-- `[ ]` **[NEW]** `src/simulation/session/` — `PlayerState`, `WorldState`, `GameSession` **(S, 0.75d)**
-- `[ ]` **[NEW]** `src/simulation/entities/` — `Ball`, `Flipper`, `Plunger` (Bumper deferred to M2.1) **(M, 1.5d)**
+- `[x]` **[NEW]** `src/simulation/events.ts` + `EventBus.ts` **(S, 0.5d)**
+- `[x]` **[NEW]** `src/simulation/PhysicsWorld.ts` — Fixed 1/60 s step; CCD on ball; `getBodyCount()` for perf tests **(S, 0.75d)**
+- `[x]` **[NEW]** `src/simulation/Simulation.ts` — Fixed-step loop; `mulberry32` seeded RNG (never `Math.random()`) **(S, 0.75d)**
+- `[x]` **[NEW]** `src/simulation/session/` — `PlayerState`, `WorldState`, `GameSession` **(S, 0.75d)**
+- `[x]` **[NEW]** `src/simulation/entities/` — `Ball`, `Flipper`, `Plunger` (Bumper deferred to M2.1) **(M, 1.5d)**
 
 ### 1.2 Input & Rendering Bridge & Storage Base
-- `[ ]` **[NEW]** `src/core/InputBuffer.ts` — Fixed-step queue; uses early input types `{ action, frame }` **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/render/InputBridge.ts` — Keyboard + gamepad → `InputBuffer` **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/render/PhaserRenderer.ts` — Interpolation + 8-point ball trail **(S, 0.75d)**
-- `[ ]` **[NEW]** `src/render/CameraController.ts` — Dead-zone follow **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/render/scenes/` — `BootScene`, `GameScene` only **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/core/StorageProvider.ts` — Implement `BrowserStorageProvider` LocalStorage fallback, and `StorageProviderFactory` for clean DI configuration (interface defined in M0.1) **(S, 0.25d)**
+- `[x]` **[NEW]** `src/core/InputBuffer.ts` — Fixed-step queue; uses early input types `{ action, frame }` **(S, 0.5d)**
+- `[x]` **[NEW]** `src/render/InputBridge.ts` — Keyboard + gamepad → `InputBuffer` **(S, 0.25d)**
+- `[x]` **[NEW]** `src/render/PhaserRenderer.ts` — Interpolation + 8-point ball trail **(S, 0.75d)**
+- `[x]` **[NEW]** `src/render/CameraController.ts` — Dead-zone follow **(S, 0.25d)**
+- `[x]` **[NEW]** `src/render/scenes/` — `BootScene`, `GameScene` only **(S, 0.5d)**
+- `[x]` **[NEW]** `src/core/StorageProvider.ts` — Implement `BrowserStorageProvider` LocalStorage fallback, and `StorageProviderFactory` for clean DI configuration (interface defined in M0.1) **(S, 0.25d)**
 
 ### 1.3 Sector 0 + Simulation Tests
-- `[ ]` **[NEW]** `src/tower/SectorLoader.ts` **(S, 0.75d)**
-- `[ ]` **[NEW]** `levels/campaign/sector_00.json` — Minimal ~50 m layout **(S, 0.5d)**
-- `[ ]` **[NEW]** `tests/simulation/` — Flipper response + CCD tunneling **(S, 0.5d)**
+- `[x]` **[NEW]** `src/tower/SectorLoader.ts` **(S, 0.75d)**
+- `[x]` **[NEW]** `levels/campaign/sector_00.json` — Minimal ~50 m layout **(S, 0.5d)**
+- `[x]` **[NEW]** `tests/simulation/` — Flipper response + CCD tunneling **(S, 0.5d)**
 
 ### 1.4 Replay Round-Trip (P0 gate — blocks M2)
-- `[ ]` **[NEW]** `src/replay/ReplaySystem.ts` — Facade on `GameSession` **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/replay/InputRecorder.ts` — `{ action, frame }` recording **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/replay/ReplayHash.ts` — Fixed-point hash (`HASH_PRECISION = 1000`) **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/replay/ReplayRunner.ts` — Node runner shell `tools/replay-runner/index.ts` stub (including worker-pool scaffolding) + compare logic + register `replay-ci` script in `package.json` **(M, 1.5d)**
-- `[ ]` **[NEW]** `tests/replays/golden_01.json` — **1 golden replay** with expected hash; manual gate before M2 **(S, 0.25d)**
+- `[x]` **[NEW]** `src/replay/ReplaySystem.ts` — Facade on `GameSession` **(S, 0.25d)**
+- `[x]` **[NEW]** `src/replay/InputRecorder.ts` — `{ action, frame }` recording **(S, 0.25d)**
+- `[x]` **[NEW]** `src/replay/ReplayHash.ts` — Fixed-point hash (`HASH_PRECISION = 1000`) **(S, 0.25d)**
+- `[x]` **[NEW]** `src/replay/ReplayRunner.ts` — Node runner shell `tools/replay-runner/index.ts` stub (including worker-pool scaffolding) + compare logic + register `replay-ci` script in `package.json` **(M, 1.5d)**
+- `[x]` **[NEW]** `tests/replays/golden_01.json` — **1 golden replay** with expected hash; manual gate before M2 **(S, 0.25d)**
 
 ### M1 Exit Criteria
-- [ ] 5-min sandbox: flippers responsive; no tunneling at max tested speed.
-- [ ] **Golden replay:** record 30 s of play → replay headlessly → hash matches.
-- [ ] Simulation tests pass with zero Phaser dependency.
-- [ ] ESLint simulation boundary enforced.
+- [x] 5-min sandbox: flippers responsive; no tunneling at max tested speed.
+- [x] **Golden replay:** record 30 s of play → replay headlessly → hash matches.
+- [x] Simulation tests pass with zero Phaser dependency.
+- [x] ESLint simulation boundary enforced.
 
 ---
 

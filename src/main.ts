@@ -1,27 +1,12 @@
 import Phaser from 'phaser';
+import RAPIER from '@dimforge/rapier2d-compat';
 import { Application } from './application';
 import { BrowserStorageProvider } from './core/BrowserStorageProvider';
 
-// A simple Phaser scene to verify execution and rendering
-class BootScene extends Phaser.Scene {
-  constructor() {
-    super('BootScene');
-  }
-
-  create() {
-    this.add.text(512, 384, 'PINBALLZZZ', {
-      fontSize: '48px',
-      color: '#ffffff',
-      fontFamily: 'monospace'
-    }).setOrigin(0.5);
-
-    this.add.text(512, 450, 'Press Z/X for left/right flipper action soon.', {
-      fontSize: '20px',
-      color: '#888888',
-      fontFamily: 'monospace'
-    }).setOrigin(0.5);
-  }
-}
+import { FlipperSpike } from './spikes/flipper-feel/FlipperSpike';
+import { FallFloorSpike } from './spikes/fall-floor/FallFloorSpike';
+import { GameScene } from './render/scenes/GameScene';
+import { BootScene } from './render/scenes/BootScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -29,11 +14,14 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 768,
   backgroundColor: '#000000',
   parent: 'game-container',
-  scene: [BootScene],
+  scene: [BootScene, GameScene, FlipperSpike, FallFloorSpike],
 };
 
 async function startApp() {
   console.log('Starting PINBALLZZZ application...');
+
+  // Ensure Rapier WASM compat is initialized globally before loading Phaser or creating Sessions
+  await RAPIER.init();
 
   // Set up the default BrowserStorageProvider (Electron storage provider can be wired in later milestones)
   const storage = new BrowserStorageProvider();
