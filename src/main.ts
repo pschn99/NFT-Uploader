@@ -7,6 +7,7 @@ import { FlipperSpike } from './spikes/flipper-feel/FlipperSpike';
 import { FallFloorSpike } from './spikes/fall-floor/FallFloorSpike';
 import { GameScene } from './render/scenes/GameScene';
 import { BootScene } from './render/scenes/BootScene';
+import { MenuScene } from './render/scenes/MenuScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -14,7 +15,7 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 768,
   backgroundColor: '#000000',
   parent: 'game-container',
-  scene: [BootScene, GameScene, FlipperSpike, FallFloorSpike],
+  scene: [BootScene, MenuScene, GameScene, FlipperSpike, FallFloorSpike],
 };
 
 async function startApp() {

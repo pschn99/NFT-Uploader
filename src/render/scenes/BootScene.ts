@@ -18,9 +18,9 @@ export class BootScene extends Phaser.Scene {
       fontFamily: 'monospace'
     }).setOrigin(0.5);
 
-    this.input.on('pointerdown', () => this.scene.start('GameScene'));
+    this.input.on('pointerdown', () => this.scene.start('MenuScene'));
     this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => {
-      this.scene.start('GameScene');
+      this.scene.start('MenuScene');
     });
   }
 }

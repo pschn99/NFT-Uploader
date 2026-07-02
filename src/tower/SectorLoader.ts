@@ -1,4 +1,5 @@
 import { Simulation } from '../simulation/Simulation';
+import { SectorChunkManager, WallData } from './SectorChunkManager';
 
 export interface SectorData {
   width: number;
@@ -6,14 +7,15 @@ export interface SectorData {
   ball: { x: number; y: number };
   plunger?: { x: number; y: number };
   flippers: Array<{ side: 'left' | 'right'; x: number; y: number }>;
-  walls: Array<{ x: number; y: number; hx: number; hy: number; rotation?: number }>;
+  bumpers?: Array<{ x: number; y: number; radius?: number }>;
+  walls: WallData[];
 }
 
 export class SectorLoader {
   /**
-   * Spawns physics bodies and walls from sector JSON configuration data.
+   * Spawns physics bodies and returns a SectorChunkManager for walls.
    */
-  static load(simulation: Simulation, data: SectorData): void {
+  static load(simulation: Simulation, data: SectorData): SectorChunkManager {
     // 1. Spawns ball
     simulation.setBall(data.ball.x, data.ball.y);
 
@@ -27,9 +29,15 @@ export class SectorLoader {
       simulation.addFlipper(f.side, f.x, f.y);
     });
 
-    // 4. Spawns boundaries, chutes, and slopes
-    data.walls.forEach((w) => {
-      simulation.createStaticWall(w.x, w.y, w.hx, w.hy, w.rotation || 0);
+    // 4. Spawns bumpers
+    data.bumpers?.forEach((b) => {
+      simulation.addBumper(b.x, b.y, b.radius || 0.6);
     });
+
+    // 5. Instantiate and return SectorChunkManager
+    const chunkManager = new SectorChunkManager(simulation, data.walls);
+    chunkManager.update(data.ball.y);
+
+    return chunkManager;
   }
 }

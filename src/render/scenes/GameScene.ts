@@ -6,6 +6,10 @@ import { InputBridge } from '../InputBridge';
 import { PhaserRenderer } from '../PhaserRenderer';
 import { CameraController } from '../CameraController';
 import { ReplaySystem } from '../../replay/ReplaySystem';
+import { HUD } from '../hud/HUD';
+import { SectorTransition } from '../transitions/SectorTransition';
+import { SectorChunkManager } from '../../tower/SectorChunkManager';
+import { AudioSystem } from '../../audio/AudioSystem';
 
 // Import sector_00 from the levels folder
 import sector00 from '../../../levels/campaign/sector_00.json';
@@ -17,60 +21,96 @@ export class GameScene extends Phaser.Scene {
   private visualRenderer!: PhaserRenderer;
   private cameraController!: CameraController;
   private replaySystem!: ReplaySystem;
+  
+  // Milestone 2 HUD, Chunk, and Audio components
+  private hud!: HUD;
+  private chunkManager!: SectorChunkManager;
+  private audioSystem!: AudioSystem;
 
-  private debugText!: Phaser.GameObjects.Text;
   private exportKey!: Phaser.Input.Keyboard.Key;
   private resetKey!: Phaser.Input.Keyboard.Key;
+  private escapeKey!: Phaser.Input.Keyboard.Key;
+  private winQueued = false;
 
   constructor() {
     super('GameScene');
   }
 
   create() {
-    // 1. Create a fresh GameSession (physics + state managers)
+    // 1. Play fade-in transition
+    SectorTransition.fadeIn(this);
+
+    // 2. Create a fresh GameSession (physics + state managers)
     this.session = new GameSession();
 
-    // 2. Load level layout into simulation
-    SectorLoader.load(this.session.simulation, sector00 as SectorData);
+    // 3. Load level layout and initialize chunk manager
+    this.chunkManager = SectorLoader.load(this.session.simulation, sector00 as SectorData);
 
-    // 3. Create core bridges
+    // 4. Create core bridges
     this.inputBuffer = new InputBuffer();
     this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation);
     this.visualRenderer = new PhaserRenderer(this, this.session.simulation);
     this.cameraController = new CameraController(this.cameras.main, this.session.simulation.ball);
     this.replaySystem = new ReplaySystem(this.session);
 
-    // 4. Debug visual HUD
-    this.debugText = this.add.text(20, 20, '', {
-      fontSize: '16px',
-      color: '#ffffff',
-      fontFamily: 'monospace',
-      lineSpacing: 4
-    }).setScrollFactor(0); // Fix to screen overlay
+    // 5. Instantiate HUD overlay
+    this.hud = new HUD(this);
 
-    // 5. Setup developer keys (P to print/save replay, R to reset ball & clear replay)
+    // 6. Setup developer & control keys
     const k = this.input.keyboard;
     if (k) {
       this.exportKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.P);
       this.resetKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+      this.escapeKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     }
 
-    console.log('Milestone 1 Sandbox Scene loaded. Press Space to charge plunger, Z/X for flippers.');
+    // 7. Instantiate and wire AudioSystem
+    this.audioSystem = new AudioSystem(this.session.simulation.eventBus);
+    this.input.once('pointerdown', () => this.audioSystem.init());
+    this.input.keyboard?.once('keydown', () => this.audioSystem.init());
+
+    this.winQueued = false;
+
+    console.log('Milestone 2 Game Sandbox Scene loaded.');
   }
 
   update() {
     if (!this.session) return;
 
-    // A. Handle developer export/reset keys
+    // Handle win condition transition
+    if (this.session.simulation.isWon) {
+      if (!this.winQueued) {
+        this.winQueued = true;
+        this.inputBridge.destroy(); // Disable further inputs
+
+        this.time.delayedCall(3000, () => {
+          SectorTransition.fadeOut(this, 800, () => {
+            this.scene.start('MenuScene');
+          });
+        });
+      }
+      this.visualRenderer.update();
+      this.hud.update(this.session);
+      return;
+    }
+
+    // A. Handle Escape key to return to menu
+    if (Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
+      SectorTransition.fadeOut(this, 300, () => {
+        this.scene.start('MenuScene');
+      });
+      return;
+    }
+
+    // B. Handle developer export/reset keys
     if (Phaser.Input.Keyboard.JustDown(this.exportKey)) {
       const replay = this.replaySystem.exportReplay(12345);
       console.log('=== EXPORTED REPLAY JSON ===');
       console.log(JSON.stringify(replay, null, 2));
       console.log('============================');
-      // Save to localStorage
       try {
         localStorage.setItem('last_pinball_replay', JSON.stringify(replay));
-        alert('Replay exported to Console and LocalStorage!');
+        alert('Replay exported to Console!');
       } catch (e) {
         console.error('Failed to write to localStorage', e);
       }
@@ -83,10 +123,10 @@ export class GameScene extends Phaser.Scene {
       console.log('Ball reset and replay log cleared.');
     }
 
-    // B. Input buffer bridge updates
+    // C. Input buffer bridge updates
     this.inputBridge.update();
 
-    // C. Pull frame entries, record to ReplaySystem, and step physics
+    // D. Pull frame entries, record to ReplaySystem, and step physics
     const currentFrame = this.session.simulation.frameIndex;
     const inputsForFrame = this.inputBuffer.getEntriesForFrame(currentFrame);
 
@@ -94,49 +134,28 @@ export class GameScene extends Phaser.Scene {
       this.replaySystem.recordInput(input.action, input.phase, input.value);
     });
 
+    // Update chunk manager with current ball height before physics step
+    if (this.session.simulation.ball) {
+      this.chunkManager.update(this.session.simulation.ball.getPosition().y);
+    }
+
     // Step physics
     this.session.simulation.step(inputsForFrame);
 
     // Record ball position for path hashing
     this.replaySystem.recordStep();
 
-    // D. Sync graphics & camera position
+    // E. Sync graphics, camera, and HUD
     this.visualRenderer.update();
     this.cameraController.update();
-
-    // E. Render debug HUD text
-    this.renderHUD();
-  }
-
-  private renderHUD(): void {
-    const ball = this.session.simulation.ball;
-    const pos = ball.getPosition();
-    const vel = ball.getVelocity();
-    const frame = this.session.simulation.frameIndex;
-    const nudgeCharges = this.session.player.nudgeCharges;
-
-    let text = `=== PINBALLZZZ VERTICAL SLICE SANDBOX ===\n`;
-    text += `Controls:\n`;
-    text += `- Z / Left  : Left Flipper\n`;
-    text += `- X / Right : Right Flipper\n`;
-    text += `- SPACE     : Charge & Launch Plunger\n`;
-    text += `- R         : Reset Ball & Clear Replay\n`;
-    text += `- P         : Export Replay to Console\n\n`;
-
-    text += `=== LIVE PHYSICS HUD ===\n`;
-    text += `- Simulation Frame : ${frame}\n`;
-    text += `- Ball Position    : (${pos.x.toFixed(2)}m, ${pos.y.toFixed(2)}m)\n`;
-    text += `- Ball Velocity    : (${vel.x.toFixed(2)}m/s, ${vel.y.toFixed(2)}m/s)\n`;
-    text += `- Max Height       : ${this.session.player.maxHeight.toFixed(2)}m\n`;
-    text += `- Nudge Charges    : ${nudgeCharges}\n`;
-    text += `- Active Bodies    : ${this.session.simulation.physicsWorld.getBodyCount()}\n`;
-
-    this.debugText.setText(text);
+    this.hud.update(this.session);
   }
 
   destroy() {
-    this.inputBridge.destroy();
-    this.visualRenderer.destroy();
-    this.session.destroy();
+    if (this.inputBridge) this.inputBridge.destroy();
+    if (this.visualRenderer) this.visualRenderer.destroy();
+    if (this.hud) this.hud.destroy();
+    if (this.chunkManager) this.chunkManager.destroy();
+    if (this.session) this.session.destroy();
   }
 }

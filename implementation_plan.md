@@ -199,40 +199,40 @@ M0 (Scaffold + P0 Spikes)
 **Estimate:** ~12 d
 
 ### 2.1 Recovery Mechanics & Checkpoints
-- `[ ]` **[NEW]** `src/simulation/entities/Anchor.ts` **(M, 1.5d)**
-- `[ ]` **[NEW]** `src/simulation/systems/NudgeSystem.ts` **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/simulation/entities/Bumper.ts` — Standard bouncing bumper entity and collision response (deferred from M1) **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/simulation/entities/FallFloor.ts` — Per M0.5 verdict **(M, 1.5d)**
-- `[ ]` **[NEW]** `src/simulation/systems/CheckpointSystem.ts` **(S, 0.75d)**
-- `[ ]` **[NEW]** `src/simulation/systems/WinConditionSystem.ts` — exit sensor & win tracking **(S, 0.5d)**
-- `[ ]` **[MODIFY]** `levels/campaign/sector_00.json` — Full ~500 m **(S, 0.25d)**
+- `[x]` **[NEW]** `src/simulation/entities/Anchor.ts` **(M, 1.5d)**
+- `[x]` **[NEW]** `src/simulation/systems/NudgeSystem.ts` **(S, 0.5d)**
+- `[x]` **[NEW]** `src/simulation/entities/Bumper.ts` — Standard bouncing bumper entity and collision response (deferred from M1) **(S, 0.5d)**
+- `[x]` **[NEW]** `src/simulation/entities/FallFloor.ts` — Per M0.5 verdict **(M, 1.5d)**
+- `[x]` **[NEW]** `src/simulation/systems/CheckpointSystem.ts` **(S, 0.75d)**
+- `[x]` **[NEW]** `src/simulation/systems/WinConditionSystem.ts` — exit sensor & win tracking **(S, 0.5d)**
+- `[x]` **[MODIFY]** `levels/campaign/sector_00.json` — Full ~500 m **(S, 0.25d)**
 
 ### 2.2 Sector Flow & UI
-- `[ ]` **[NEW]** `src/render/scenes/MenuScene.ts` **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/render/transitions/SectorTransition.ts` **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/render/hud/HUD.ts` **(S, 0.5d)**
-- `[ ]` **[NEW]** `src/tower/SectorChunkManager.ts` — Dynamic chunk loading and unloading **(M, 1.0d)**
+- `[x]` **[NEW]** `src/render/scenes/MenuScene.ts` **(S, 0.5d)**
+- `[x]` **[NEW]** `src/render/transitions/SectorTransition.ts` **(S, 0.5d)**
+- `[x]` **[NEW]** `src/render/hud/HUD.ts` **(S, 0.5d)**
+- `[x]` **[NEW]** `src/tower/SectorChunkManager.ts` — Dynamic chunk loading and unloading **(M, 1.0d)**
 
 ### 2.3 Replay Scale + Perf Smoke (target: 5 replays)
-- `[ ]` **[MODIFY]** `tests/replays/` — Expand to 5 replays via `replay-runner` script **(S, 0.5d)**
-- `[ ]` **[NEW]** `tests/perf/body-count.test.ts` — Assert ≤ 50 bodies during Sector 0 run **(S, 0.5d)**
-- `[ ]` **[NEW]** `tests/perf/replay-speed.test.ts` — 500 m re-sim < 10 s headless **(S, 0.25d)**
+- `[x]` **[MODIFY]** `tests/replays/` — Expand to 5 replays via `replay-runner` script **(S, 0.5d)**
+- `[x]` **[NEW]** `tests/perf/body-count.test.ts` — Assert ≤ 50 bodies during Sector 0 run **(S, 0.5d)**
+- `[x]` **[NEW]** `tests/perf/replay-speed.test.ts` — 500 m re-sim < 10 s headless **(S, 0.25d)**
 
 ### 2.4 Audio
-- `[ ]` **[NEW]** `src/audio/AudioSystem.ts` **(M, 1.5d)**
-- `[ ]` **[NEW]** Audio build script — shell script with ffmpeg `loudnorm` filter and loop-point metadata generation **(S, 0.5d)**
-- `[ ]` **[NEW]** Anchor, FallFloor, checkpoint, replay integration tests **(S, 0.5d)**
+- `[x]` **[NEW]** `src/audio/AudioSystem.ts` **(M, 1.5d)**
+- `[x]` **[NEW]** Audio build script — shell script with ffmpeg `loudnorm` filter and loop-point metadata generation **(S, 0.5d)**
+- `[x]` **[NEW]** Anchor, FallFloor, checkpoint, replay integration tests **(S, 0.5d)**
 
 ### 2.5 Campaign Sector 3 Layout JSON
-- `[ ]` **[NEW]** Campaign Content: Sector 3 Layout JSON — Design plunger, timing launcher, and booster layouts directly in Sector 3 campaign JSON using MVP-supported blocks **(S, 1.0d)**
+- `[x]` **[NEW]** Campaign Content: Sector 3 Layout JSON — Design plunger, timing launcher, and booster layouts directly in Sector 3 campaign JSON using MVP-supported blocks **(S, 1.0d)**
 
 ### M2 Exit Criteria
-- [ ] Creator Studio Scope Freeze Decision: Review progress, evaluate scope creep risks (undo/redo, copy/paste), and finalize Creator Studio cuts before M3 kickoff.
-- [ ] Full Sector 0 clear from menu to win.
-- [ ] Checkpoints, Fall Floors, Anchor per GDD §6.
-- [ ] `npm run replay-ci` passes 5 replays.
-- [ ] Perf smoke: body count ≤ 50; replay re-sim < 10 s.
-- [ ] Adaptive audio responds to fall and sector entry.
+- [x] Creator Studio Scope Freeze Decision: Review progress, evaluate scope creep risks (undo/redo, copy/paste), and finalize Creator Studio cuts before M3 kickoff.
+- [x] Full Sector 0 clear from menu to win.
+- [x] Checkpoints, Fall Floors, Anchor per GDD §6.
+- [x] `npm run replay-ci` passes 5 replays.
+- [x] Perf smoke: body count ≤ 50; replay re-sim < 10 s.
+- [x] Adaptive audio responds to fall and sector entry.
 
 ---
 

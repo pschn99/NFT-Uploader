@@ -8,6 +8,14 @@ import { Ball } from './entities/Ball';
 import { Flipper } from './entities/Flipper';
 import { Plunger } from './entities/Plunger';
 
+// Milestone 2 Recovery & System imports
+import { Anchor } from './entities/Anchor';
+import { Bumper } from './entities/Bumper';
+import { FallFloor } from './entities/FallFloor';
+import { NudgeSystem } from './systems/NudgeSystem';
+import { CheckpointSystem } from './systems/CheckpointSystem';
+import { WinConditionSystem } from './systems/WinConditionSystem';
+
 export class Simulation {
   public physicsWorld: PhysicsWorld;
   public eventBus: EventBus<SimulationEvents>;
@@ -18,6 +26,13 @@ export class Simulation {
   public flippers: Flipper[] = [];
   public plunger: Plunger | null = null;
   public staticBodies: RAPIER.RigidBody[] = [];
+
+  // Milestone 2 simulation entities
+  public anchor: Anchor;
+  public bumpers: Bumper[] = [];
+  public fallFloors: FallFloor[] = [];
+  public isWon = false;
+  public elapsedTimeMs = 0;
 
   public frameIndex = 0;
   private rng: () => number;
@@ -33,8 +48,11 @@ export class Simulation {
     this.worldState = worldState;
     this.rng = this.createMulberry32(seed);
 
-    // Pushed gravity for fast vertical arcade feel (4x gravity Y scaling)
+    // Gravity scaled for snappy pinball feel (4x gravity Y scaling)
     this.physicsWorld = new PhysicsWorld({ x: 0, y: -9.81 * 4.0 });
+
+    // Instantiate anchor manager
+    this.anchor = new Anchor(this.physicsWorld);
   }
 
   /**
@@ -87,6 +105,24 @@ export class Simulation {
   }
 
   /**
+   * Adds an active circular bumper to the simulation.
+   */
+  addBumper(x: number, y: number, radius = 0.6): Bumper {
+    const bumper = new Bumper(this.physicsWorld, x, y, radius);
+    this.bumpers.push(bumper);
+    return bumper;
+  }
+
+  /**
+   * Adds a dynamic one-way checkpoint catch floor.
+   */
+  addFallFloor(x: number, y: number, hw = 2.5, hh = 0.15): FallFloor {
+    const floor = new FallFloor(this.physicsWorld, x, y, hw, hh);
+    this.fallFloors.push(floor);
+    return floor;
+  }
+
+  /**
    * Spawns a solid boundary wall.
    */
   createStaticWall(x: number, y: number, hx: number, hy: number, rotation = 0): RAPIER.RigidBody {
@@ -103,13 +139,50 @@ export class Simulation {
    * Executes inputs for the current frame, steps Rapier, updates heights, and processes resets.
    */
   step(inputs: { action: string; phase: string; value?: number }[]): void {
+    if (this.isWon) return;
+
     // 1. Process inputs for this frame
     inputs.forEach((input) => {
+      // Toggle Anchor Suspend
+      if (input.action === 'anchor') {
+        if (input.phase === 'down') {
+          if (this.anchor.isAttached()) {
+            this.anchor.detach();
+          } else if (this.playerState.anchorCharges > 0) {
+            this.playerState.anchorCharges--;
+            this.anchor.attach(this.ball);
+            this.eventBus.emit('AnchorTriggered', {
+              anchorId: `a_${this.frameIndex}`,
+              chargesRemaining: this.playerState.anchorCharges
+            });
+          }
+        }
+      }
+
+      // Nudge Actions (break anchor suspension automatically)
+      if (input.action === 'nudge_left' && input.phase === 'down') {
+        if (this.anchor.isAttached()) {
+          this.anchor.detach();
+        }
+        NudgeSystem.nudge(this.ball, this.playerState, this.eventBus, 'left');
+      }
+
+      if (input.action === 'nudge_right' && input.phase === 'down') {
+        if (this.anchor.isAttached()) {
+          this.anchor.detach();
+        }
+        NudgeSystem.nudge(this.ball, this.playerState, this.eventBus, 'right');
+      }
+
+      // Flipper Action (breaks anchor suspension automatically on stroke)
       if (input.action === 'flipper_left') {
         const leftFlippers = this.flippers.filter((f) => f.side === 'left');
         leftFlippers.forEach((f) => f.setInput(input.phase === 'down'));
         if (input.phase === 'down') {
           this.eventBus.emit('FlipperStruck', { side: 'left', angularVelocity: 30.0 });
+          if (this.anchor.isAttached()) {
+            this.anchor.detach();
+          }
         }
       }
       
@@ -118,19 +191,23 @@ export class Simulation {
         rightFlippers.forEach((f) => f.setInput(input.phase === 'down'));
         if (input.phase === 'down') {
           this.eventBus.emit('FlipperStruck', { side: 'right', angularVelocity: -30.0 });
+          if (this.anchor.isAttached()) {
+            this.anchor.detach();
+          }
         }
       }
 
       if (input.action === 'plunger') {
         if (this.plunger) {
           if (input.phase === 'down') {
-            // Charging plunger
             this.plunger.chargePlunger(0.05); // Charges 5% per frame
           } else if (input.phase === 'up') {
-            // Release plunger
             const force = this.plunger.fire(this.ball);
             if (force > 0) {
               this.eventBus.emit('PlungerFired', { force });
+              if (this.anchor.isAttached()) {
+                this.anchor.detach();
+              }
             }
           }
         }
@@ -140,8 +217,27 @@ export class Simulation {
     // 2. Step the Rapier physics world
     this.physicsWorld.step();
     this.frameIndex++;
+    this.elapsedTimeMs += 16.666; // Approx 1 frame duration at 60fps
 
-    // 3. Height metrics tracking & drain detection
+    // 3. Resolve active bumper colliders collision bounce impulses
+    if (this.ball) {
+      this.bumpers.forEach((bumper) => {
+        const hit = bumper.resolveHit(this.ball);
+        if (hit) {
+          this.eventBus.emit('BallImpact', {
+            position: this.ball.getPosition(),
+            impulse: 8.0
+          });
+        }
+      });
+    }
+
+    // 4. Update one-way catch floors
+    this.fallFloors.forEach((floor) => {
+      floor.update(this.ball);
+    });
+
+    // 5. Height metrics tracking & drain detection
     if (this.ball) {
       const pos = this.ball.getPosition();
       this.playerState.currentHeight = pos.y;
@@ -150,9 +246,24 @@ export class Simulation {
         this.playerState.maxHeight = pos.y;
       }
 
+      // Check checkpoints crossing
+      const newFloor = CheckpointSystem.check(this.ball, this.playerState, this.eventBus, this.physicsWorld);
+      if (newFloor) {
+        this.fallFloors.push(newFloor);
+      }
+
+      // Check exit win condition height clearance
+      const won = WinConditionSystem.check(this.ball, this.eventBus, this.elapsedTimeMs);
+      if (won) {
+        this.isWon = true;
+      }
+
       // Drain check: reset to last checkpoint if ball falls below vertical bounds
       if (pos.y < -1.5) {
         const fallenY = pos.y;
+        if (this.anchor.isAttached()) {
+          this.anchor.detach();
+        }
         // Reset ball at checkpoint Y + 2m (dropping down safely)
         this.ball.reset(10.24, this.playerState.lastCheckpointY + 2.0);
         this.eventBus.emit('BallFell', { fromY: fallenY });
@@ -164,6 +275,9 @@ export class Simulation {
     this.physicsWorld.destroy();
     this.staticBodies = [];
     this.flippers = [];
+    this.bumpers = [];
+    this.fallFloors = [];
+    this.anchor.detach();
     this.plunger = null;
   }
 }

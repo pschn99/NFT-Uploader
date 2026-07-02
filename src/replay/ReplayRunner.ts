@@ -24,8 +24,8 @@ export class ReplayRunner {
     // 2. Instantiate GameSession with saved seed
     const session = new GameSession(replay.seed);
 
-    // 3. Load same sector_00 level layout
-    SectorLoader.load(session.simulation, sector00 as SectorData);
+    // 3. Load same sector_00 level layout and get chunkManager
+    const chunkManager = SectorLoader.load(session.simulation, sector00 as SectorData);
 
     // 4. Setup InputBuffer with replay inputs
     const inputBuffer = new InputBuffer();
@@ -36,6 +36,11 @@ export class ReplayRunner {
     // 5. Execute frames headlessly
     for (let frame = 0; frame < replay.durationFrames; frame++) {
       const inputs = inputBuffer.getEntriesForFrame(frame);
+      
+      if (session.simulation.ball) {
+        chunkManager.update(session.simulation.ball.getPosition().y);
+      }
+
       session.simulation.step(inputs);
 
       if (session.simulation.ball) {
@@ -49,6 +54,7 @@ export class ReplayRunner {
     const success = actualHash === replay.expectedHash;
 
     // Clean up
+    chunkManager.destroy();
     session.destroy();
 
     return {

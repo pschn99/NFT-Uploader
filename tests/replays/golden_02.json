@@ -110,228 +110,168 @@
     {
       "frame": 26,
       "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 27,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 28,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 29,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 30,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 31,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 32,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 33,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 34,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 35,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 36,
+      "action": "plunger",
       "phase": "up"
     },
     {
-      "frame": 100,
+      "frame": 120,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 250,
+      "frame": 270,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 400,
+      "frame": 420,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 550,
+      "frame": 570,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 700,
+      "frame": 720,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 850,
+      "frame": 870,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 1000,
+      "frame": 1020,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 1150,
+      "frame": 1170,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 1300,
+      "frame": 1320,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 1450,
+      "frame": 1470,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 1600,
+      "frame": 1620,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 115,
+      "frame": 135,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 265,
+      "frame": 285,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 415,
+      "frame": 435,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 565,
+      "frame": 585,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 715,
+      "frame": 735,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 865,
+      "frame": 885,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1015,
+      "frame": 1035,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1165,
+      "frame": 1185,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1315,
+      "frame": 1335,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1465,
+      "frame": 1485,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1615,
+      "frame": 1635,
       "action": "flipper_left",
-      "phase": "up"
-    },
-    {
-      "frame": 180,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 330,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 480,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 630,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 780,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 930,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 1080,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 1230,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 1380,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 1530,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 1680,
-      "action": "flipper_right",
-      "phase": "down"
-    },
-    {
-      "frame": 195,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 345,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 495,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 645,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 795,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 945,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 1095,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 1245,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 1395,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 1545,
-      "action": "flipper_right",
-      "phase": "up"
-    },
-    {
-      "frame": 1695,
-      "action": "flipper_right",
       "phase": "up"
     }
   ],
-  "expectedHash": "1ff21ad4"
+  "expectedHash": "7e1039b4"
 }
