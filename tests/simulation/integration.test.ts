@@ -57,13 +57,13 @@ describe('Simulation Integration: Tiers, Platforms & Recovery', () => {
     session.simulation.setBall(10.24, 25.0); // Ball radius is 0.35
     
     // Fall floor center at Y = 20.0, halfHeight = 0.15. Top edge is 20.15
-    const floor = new FallFloor(session.simulation.physicsWorld, 10.24, 20.0);
+    const floor = new FallFloor(session.simulation.physicsWorld, 10.24, 20.0, 2.5, 0.15, 0, 2000);
     session.simulation.fallFloors.push(floor);
 
     // 1. Position ball above floor (Y = 22.0)
     session.simulation.ball.reset(10.24, 22.0);
     // Explicitly update once to ensure it is solid before the first step
-    floor.update(session.simulation.ball);
+    floor.update(session.simulation.ball, 0);
     expect(floor.isSolid()).toBe(true);
 
     // Step physics multiple frames to let it fall naturally under gravity
@@ -79,7 +79,7 @@ describe('Simulation Integration: Tiers, Platforms & Recovery', () => {
 
     // 2. Position ball below floor (Y = 18.0) and verify it passes straight through moving upward
     session.simulation.ball.reset(10.24, 18.0);
-    floor.update(session.simulation.ball);
+    floor.update(session.simulation.ball, 0);
     expect(floor.isSolid()).toBe(false);
     
     // Give it upward velocity

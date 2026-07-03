@@ -1,48 +1,64 @@
 import Phaser from 'phaser';
 import { InputBuffer } from '../core/InputBuffer';
 import { Simulation } from '../simulation/Simulation';
+import { SettingsSystem, DEFAULT_SETTINGS } from '../core/SettingsSystem';
+
+// Map from Phaser key code strings to Phaser.Input.Keyboard.KeyCodes
+const KEY_CODE_MAP: Record<string, number> = {
+  'KeyZ': Phaser.Input.Keyboard.KeyCodes.Z,
+  'KeyX': Phaser.Input.Keyboard.KeyCodes.X,
+  'Space': Phaser.Input.Keyboard.KeyCodes.SPACE,
+  'KeyA': Phaser.Input.Keyboard.KeyCodes.A,
+  'KeyD': Phaser.Input.Keyboard.KeyCodes.D,
+  'KeyS': Phaser.Input.Keyboard.KeyCodes.S,
+  'ArrowLeft': Phaser.Input.Keyboard.KeyCodes.LEFT,
+  'ArrowRight': Phaser.Input.Keyboard.KeyCodes.RIGHT,
+  'ArrowDown': Phaser.Input.Keyboard.KeyCodes.DOWN,
+  'Escape': Phaser.Input.Keyboard.KeyCodes.ESC,
+};
 
 export class InputBridge {
   private scene: Phaser.Scene;
   private inputBuffer: InputBuffer;
   private simulation: Simulation;
+  private settingsSystem: SettingsSystem | null;
 
-  // Key objects
-  private leftKey!: Phaser.Input.Keyboard.Key;
-  private rightKey!: Phaser.Input.Keyboard.Key;
-  private arrowLeftKey!: Phaser.Input.Keyboard.Key;
-  private arrowRightKey!: Phaser.Input.Keyboard.Key;
-  private spaceKey!: Phaser.Input.Keyboard.Key;
+  // Bound key objects for cleanup
+  private boundKeys: Phaser.Input.Keyboard.Key[] = [];
 
-  // Milestone 2 key bindings
-  private shiftKey!: Phaser.Input.Keyboard.Key;
-  private cKey!: Phaser.Input.Keyboard.Key;
-  private aKey!: Phaser.Input.Keyboard.Key;
-  private dKey!: Phaser.Input.Keyboard.Key;
-
-  constructor(scene: Phaser.Scene, inputBuffer: InputBuffer, simulation: Simulation) {
+  constructor(
+    scene: Phaser.Scene,
+    inputBuffer: InputBuffer,
+    simulation: Simulation,
+    settingsSystem?: SettingsSystem
+  ) {
     this.scene = scene;
     this.inputBuffer = inputBuffer;
     this.simulation = simulation;
+    this.settingsSystem = settingsSystem ?? null;
     this.setupListeners();
+  }
+
+  private getKeyCode(keyName: string): number {
+    return KEY_CODE_MAP[keyName] ?? Phaser.Input.Keyboard.KeyCodes.Z;
   }
 
   private setupListeners(): void {
     const k = this.scene.input.keyboard;
     if (!k) return;
 
-    // Standard buttons: Z/X or Arrow keys for flippers, Space for plunger
-    this.leftKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
-    this.rightKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.X);
-    this.arrowLeftKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
-    this.arrowRightKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-    this.spaceKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    // Read keybindings from SettingsSystem (per GDD §6: "All actions remappable")
+    const bindings = this.settingsSystem?.settings?.keyBindings ?? DEFAULT_SETTINGS.keyBindings;
 
-    // Milestone 2 recovery keys
-    this.shiftKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
-    this.cKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.C);
-    this.aKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-    this.dKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+    // Create keys from settings
+    const flipperLeftKey = k.addKey(this.getKeyCode(bindings.flipperLeft));
+    const flipperRightKey = k.addKey(this.getKeyCode(bindings.flipperRight));
+    const plungerKey = k.addKey(this.getKeyCode(bindings.plunger));
+    const nudgeLeftKey = k.addKey(this.getKeyCode(bindings.nudgeLeft));
+    const nudgeRightKey = k.addKey(this.getKeyCode(bindings.nudgeRight));
+    const anchorKey = k.addKey(this.getKeyCode(bindings.anchor));
+
+    this.boundKeys = [flipperLeftKey, flipperRightKey, plungerKey, nudgeLeftKey, nudgeRightKey, anchorKey];
 
     // Left Flipper Press / Release
     const pressLeft = () => {
@@ -60,10 +76,8 @@ export class InputBridge {
       });
     };
 
-    this.leftKey.on('down', pressLeft);
-    this.leftKey.on('up', releaseLeft);
-    this.arrowLeftKey.on('down', pressLeft);
-    this.arrowLeftKey.on('up', releaseLeft);
+    flipperLeftKey.on('down', pressLeft);
+    flipperLeftKey.on('up', releaseLeft);
 
     // Right Flipper Press / Release
     const pressRight = () => {
@@ -81,13 +95,11 @@ export class InputBridge {
       });
     };
 
-    this.rightKey.on('down', pressRight);
-    this.rightKey.on('up', releaseRight);
-    this.arrowRightKey.on('down', pressRight);
-    this.arrowRightKey.on('up', releaseRight);
+    flipperRightKey.on('down', pressRight);
+    flipperRightKey.on('up', releaseRight);
 
     // Plunger Release
-    this.spaceKey.on('up', () => {
+    plungerKey.on('up', () => {
       this.inputBuffer.addEntry({
         frame: this.simulation.frameIndex,
         action: 'plunger',
@@ -95,19 +107,17 @@ export class InputBridge {
       });
     });
 
-    // Anchor deploy toggles (Shift or C)
-    const triggerAnchor = () => {
+    // Anchor deploy toggle (default: S / Down Arrow per GDD §6)
+    anchorKey.on('down', () => {
       this.inputBuffer.addEntry({
         frame: this.simulation.frameIndex,
         action: 'anchor',
         phase: 'down'
       });
-    };
-    this.shiftKey.on('down', triggerAnchor);
-    this.cKey.on('down', triggerAnchor);
+    });
 
-    // Nudges (A -> Left Nudge, D -> Right Nudge)
-    this.aKey.on('down', () => {
+    // Nudges (default: A -> Left Nudge, D -> Right Nudge per GDD §6)
+    nudgeLeftKey.on('down', () => {
       this.inputBuffer.addEntry({
         frame: this.simulation.frameIndex,
         action: 'nudge_left',
@@ -115,7 +125,7 @@ export class InputBridge {
       });
     });
 
-    this.dKey.on('down', () => {
+    nudgeRightKey.on('down', () => {
       this.inputBuffer.addEntry({
         frame: this.simulation.frameIndex,
         action: 'nudge_right',
@@ -128,7 +138,7 @@ export class InputBridge {
    * Polls inputs that need continuous frame-by-frame updates (like plunger charging).
    */
   update(): void {
-    if (this.spaceKey && this.spaceKey.isDown) {
+    if (this.boundKeys.length >= 3 && this.boundKeys[2].isDown) {
       this.inputBuffer.addEntry({
         frame: this.simulation.frameIndex,
         action: 'plunger',
@@ -138,14 +148,7 @@ export class InputBridge {
   }
 
   destroy(): void {
-    if (this.leftKey) this.leftKey.removeAllListeners();
-    if (this.rightKey) this.rightKey.removeAllListeners();
-    if (this.arrowLeftKey) this.arrowLeftKey.removeAllListeners();
-    if (this.arrowRightKey) this.arrowRightKey.removeAllListeners();
-    if (this.spaceKey) this.spaceKey.removeAllListeners();
-    if (this.shiftKey) this.shiftKey.removeAllListeners();
-    if (this.cKey) this.cKey.removeAllListeners();
-    if (this.aKey) this.aKey.removeAllListeners();
-    if (this.dKey) this.dKey.removeAllListeners();
+    this.boundKeys.forEach((key) => key.removeAllListeners());
+    this.boundKeys = [];
   }
 }

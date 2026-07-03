@@ -6,6 +6,9 @@ import { FallFloor } from '../entities/FallFloor';
 import { PhysicsWorld } from '../PhysicsWorld';
 import { CHECKPOINT_INTERVAL_METRES, FALL_FLOOR_OFFSET_METRES } from '../constants';
 
+// Play area center per AGENTS.md §3 (excluding plunger lane)
+const PLAY_AREA_CENTRE_X = 9.125;
+
 export class CheckpointSystem {
   /**
    * Tracks ball climbing height to trigger checkpoints every 100m.
@@ -15,7 +18,8 @@ export class CheckpointSystem {
     ball: Ball,
     playerState: PlayerState,
     eventBus: EventBus<SimulationEvents>,
-    physicsWorld: PhysicsWorld
+    physicsWorld: PhysicsWorld,
+    floorX = PLAY_AREA_CENTRE_X
   ): FallFloor | null {
     const ballPos = ball.body.translation();
 
@@ -31,7 +35,6 @@ export class CheckpointSystem {
       playerState.anchorCharges = 2;
 
       // Create one-way catch floor 10m below checkpoint height
-      const floorX = 10.24; // Canvas center width
       const floorY = expectedCheckpointY - FALL_FLOOR_OFFSET_METRES;
 
       const fallFloor = new FallFloor(physicsWorld, floorX, floorY);

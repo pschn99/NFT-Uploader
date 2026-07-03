@@ -98,7 +98,7 @@ export class PlayabilityCheck {
 
     // 5. Build stamp
     const replayHash = ReplayHash.calculate(winPosition);
-    const levelHash = this.computeLevelHash(levelData);
+    const levelHash = await this.computeLevelHash(levelData);
     const engineVersion = this.getEngineVersion();
 
     const stamp: PlayabilityCheckStamp = {
@@ -117,30 +117,19 @@ export class PlayabilityCheck {
   // ---------------------------------------------------------------------------
 
 
-  private computeLevelHash(levelData: LevelData): string {
+  private async computeLevelHash(levelData: LevelData): Promise<string> {
     const canonical = serializeCanonical(levelData);
-    // Synchronous fallback: FNV-1a 32-bit (sufficient for level hash in local v1.0)
-    return 'sha256:' + this.fnv1a32(canonical).toString(16).padStart(8, '0');
-  }
-
-  private fnv1a32(str: string): number {
-    let hash = 0x811c9dc5;
-    for (let i = 0; i < str.length; i++) {
-      hash ^= str.charCodeAt(i);
-      hash = (Math.imul(hash, 0x01000193) >>> 0);
-    }
-    return hash;
+    // SHA-256 hash per TDD §9
+    const encoder = new TextEncoder();
+    const data = encoder.encode(canonical);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return 'sha256:' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   private getEngineVersion(): string {
-    // Rapier version is pinned in package.json; read dynamically at runtime.
-    // Falls back to 'unknown' in environments where package.json is unavailable.
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pkg = require('../../package.json') as { dependencies?: Record<string, string> };
-      return pkg.dependencies?.['@dimforge/rapier2d-compat'] ?? 'unknown';
-    } catch {
-      return 'unknown';
-    }
+    // Rapier version is pinned in package.json
+    // Return the known version for this build
+    return '0.12.0';
   }
 }

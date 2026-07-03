@@ -3,11 +3,13 @@ import Phaser from 'phaser';
 export class MenuScene extends Phaser.Scene {
   private playKey!: Phaser.Input.Keyboard.Key;
   private controlsKey!: Phaser.Input.Keyboard.Key;
+  private creatorKey!: Phaser.Input.Keyboard.Key;
   private showingControls = false;
 
   // Visual text objects
   private titleText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
+  private creatorPromptText!: Phaser.GameObjects.Text;
   private controlsText!: Phaser.GameObjects.Text;
 
   constructor() {
@@ -37,14 +39,21 @@ export class MenuScene extends Phaser.Scene {
     });
 
     // 2. Play Prompt
-    this.promptText = this.add.text(width / 2, height / 2 + 20, '[ PRESS SPACE TO PLAY ]', {
-      fontSize: '24px',
+    this.promptText = this.add.text(width / 2, height / 2 + 10, '[ PRESS SPACE TO PLAY CAMPAIGN ]', {
+      fontSize: '20px',
       color: '#ffffff',
       fontFamily: 'monospace'
     }).setOrigin(0.5);
 
+    // 2b. Creator Studio Prompt
+    this.creatorPromptText = this.add.text(width / 2, height / 2 + 50, '[ PRESS E FOR CREATOR STUDIO ]', {
+      fontSize: '20px',
+      color: '#aaaaff',
+      fontFamily: 'monospace'
+    }).setOrigin(0.5);
+
     // 3. Controls Help Toggle Prompt
-    this.controlsText = this.add.text(width / 2, height / 2 + 100, 'Press "C" to view controls list', {
+    this.controlsText = this.add.text(width / 2, height / 2 + 110, 'Press "C" to view controls list', {
       fontSize: '16px',
       color: '#888888',
       fontFamily: 'monospace'
@@ -55,22 +64,28 @@ export class MenuScene extends Phaser.Scene {
     if (k) {
       this.playKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.controlsKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+      this.creatorKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     }
 
     // Pointer-click falls back to launching the game directly
     this.input.on('pointerdown', () => {
-      this.scene.start('GameScene');
+      this.scene.start('GameScene', { sectorIndex: 0 });
     });
   }
 
   update() {
-    // Space to transition and play
-    if (Phaser.Input.Keyboard.JustDown(this.playKey)) {
-      this.scene.start('GameScene');
+    // Space to transition and play campaign
+    if (this.playKey && Phaser.Input.Keyboard.JustDown(this.playKey)) {
+      this.scene.start('GameScene', { sectorIndex: 0 });
+    }
+
+    // E to transition to Creator Studio
+    if (this.creatorKey && Phaser.Input.Keyboard.JustDown(this.creatorKey)) {
+      this.scene.start('CreatorScene');
     }
 
     // C to toggle controls overlay
-    if (Phaser.Input.Keyboard.JustDown(this.controlsKey)) {
+    if (this.controlsKey && Phaser.Input.Keyboard.JustDown(this.controlsKey)) {
       this.showingControls = !this.showingControls;
       this.updateControlsOverlay();
     }
@@ -80,6 +95,7 @@ export class MenuScene extends Phaser.Scene {
     if (this.showingControls) {
       this.titleText.setVisible(false);
       this.promptText.setVisible(false);
+      this.creatorPromptText.setVisible(false);
 
       let text = `=== PINBALLZZZ CONTROLS ===\n\n`;
       text += `- Z / Left Arrow  : Swing Left Flipper\n`;
@@ -97,6 +113,7 @@ export class MenuScene extends Phaser.Scene {
     } else {
       this.titleText.setVisible(true);
       this.promptText.setVisible(true);
+      this.creatorPromptText.setVisible(true);
 
       this.controlsText.setText('Press "C" to view controls list');
       this.controlsText.setFontSize(16);

@@ -7,6 +7,7 @@ import { FallFloorSpike } from './spikes/fall-floor/FallFloorSpike';
 import { GameScene } from './render/scenes/GameScene';
 import { BootScene } from './render/scenes/BootScene';
 import { MenuScene } from './render/scenes/MenuScene';
+import { CreatorScene } from './render/scenes/CreatorScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -14,7 +15,7 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 768,
   backgroundColor: '#000000',
   parent: 'game-container',
-  scene: [BootScene, MenuScene, GameScene, FlipperSpike, FallFloorSpike],
+  scene: [BootScene, MenuScene, GameScene, CreatorScene, FlipperSpike, FallFloorSpike],
 };
 
 async function startApp() {
@@ -26,7 +27,8 @@ async function startApp() {
   await appInstance.boot();
 
   // 3. Launch Phaser
-  new Phaser.Game(config);
+  const game = new Phaser.Game(config);
+  (game as any).appInstance = appInstance;
 }
 
 window.addEventListener('DOMContentLoaded', () => {

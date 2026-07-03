@@ -163,4 +163,16 @@ export class AudioSystem {
       osc.stop(now + idx * 0.1 + 0.5);
     });
   }
+
+  /**
+   * Closes the audio context and releases native audio resource handles.
+   */
+  destroy(): void {
+    if (this.ctx) {
+      this.ctx.close().catch((err) => {
+        console.error('AudioSystem: failed to close AudioContext:', err);
+      });
+      this.ctx = null;
+    }
+  }
 }

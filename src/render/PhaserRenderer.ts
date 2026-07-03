@@ -20,10 +20,12 @@ export class PhaserRenderer {
   // 8-point ball path trail variables
   private ballTrail: { x: number; y: number }[] = [];
   private maxTrailLength = 8;
+  private screenHeight: number;
 
   constructor(scene: Phaser.Scene, simulation: Simulation) {
     this.scene = scene;
     this.simulation = simulation;
+    this.screenHeight = scene.scale.height;
     this.setupVisuals();
   }
 
@@ -56,7 +58,7 @@ export class PhaserRenderer {
     if (this.simulation.plunger) {
       const p = this.simulation.plunger;
       const px = p.body.translation().x * PIXELS_PER_METRE;
-      const py = 768 - (p.body.translation().y * PIXELS_PER_METRE);
+      const py = this.screenHeight - (p.body.translation().y * PIXELS_PER_METRE);
       
       // Plunger physical plate
       this.plungerGraphics = this.scene.add.rectangle(
@@ -76,7 +78,7 @@ export class PhaserRenderer {
     this.simulation.bumpers.forEach((bumper) => {
       const pos = bumper.getPosition();
       const px = pos.x * PIXELS_PER_METRE;
-      const py = 768 - (pos.y * PIXELS_PER_METRE);
+      const py = this.screenHeight - (pos.y * PIXELS_PER_METRE);
       const rad = bumper.radius * PIXELS_PER_METRE;
 
       const circle = this.scene.add.circle(px, py, rad, 0x222222);
@@ -92,7 +94,7 @@ export class PhaserRenderer {
     // 1. Sync Ball Position
     const ballPos = this.simulation.ball.getPosition();
     const bx = ballPos.x * PIXELS_PER_METRE;
-    const by = 768 - (ballPos.y * PIXELS_PER_METRE);
+    const by = this.screenHeight - (ballPos.y * PIXELS_PER_METRE);
     this.ballGraphics.setPosition(bx, by);
 
     // Save trail point
@@ -125,7 +127,7 @@ export class PhaserRenderer {
         const halfs = col.halfExtents();
         
         const px = pos.x * PIXELS_PER_METRE;
-        const py = 768 - (pos.y * PIXELS_PER_METRE);
+        const py = this.screenHeight - (pos.y * PIXELS_PER_METRE);
         const w = halfs.x * 2 * PIXELS_PER_METRE;
         const h = halfs.y * 2 * PIXELS_PER_METRE;
 
@@ -151,7 +153,7 @@ export class PhaserRenderer {
     this.simulation.fallFloors.forEach((floor) => {
       const pos = floor.getPosition();
       const px = pos.x * PIXELS_PER_METRE;
-      const py = 768 - (pos.y * PIXELS_PER_METRE);
+      const py = this.screenHeight - (pos.y * PIXELS_PER_METRE);
       const w = floor.halfWidth * 2 * PIXELS_PER_METRE;
       const h = floor.halfHeight * 2 * PIXELS_PER_METRE;
 
@@ -170,7 +172,7 @@ export class PhaserRenderer {
       const rect = this.flipperGraphicsMap.get(flipper);
       if (rect) {
         const fpos = flipper.getPosition();
-        rect.setPosition(fpos.x * PIXELS_PER_METRE, 768 - (fpos.y * PIXELS_PER_METRE));
+        rect.setPosition(fpos.x * PIXELS_PER_METRE, this.screenHeight - (fpos.y * PIXELS_PER_METRE));
         rect.setRotation(-flipper.getRotation());
       }
     });

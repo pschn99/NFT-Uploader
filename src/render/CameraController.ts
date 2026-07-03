@@ -7,13 +7,15 @@ export class CameraController {
   private ball: Ball;
 
   private scrollY = 0;
-  private screenHeight = 768;
+  private screenHeight: number;
   private topThreshold = 250;    // Pixels from top of screen before scrolling up
-  private bottomThreshold = 518; // Pixels from top of screen before scrolling down (768 - 250)
+  private bottomThreshold: number; // Pixels from top of screen before scrolling down
 
   constructor(camera: Phaser.Cameras.Scene2D.Camera, ball: Ball) {
     this.camera = camera;
     this.ball = ball;
+    this.screenHeight = camera.height;
+    this.bottomThreshold = this.screenHeight - 250;
     this.camera.setScroll(0, 0);
   }
 

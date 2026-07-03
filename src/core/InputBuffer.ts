@@ -13,10 +13,14 @@ export class InputBuffer {
   }
 
   /**
-   * Retrieves all input entries registered for the specific frame.
+   * Retrieves all input entries registered for the specific frame
+   * and removes them from the buffer to prevent unbounded growth.
    */
   getEntriesForFrame(frame: number): InputEntry[] {
-    return this.entries.filter((entry) => entry.frame === frame);
+    const matching = this.entries.filter((entry) => entry.frame === frame);
+    // Remove consumed entries to prevent memory leak (TDD: "fixed-step input queue")
+    this.entries = this.entries.filter((entry) => entry.frame > frame);
+    return matching;
   }
 
   /**

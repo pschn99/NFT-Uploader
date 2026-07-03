@@ -15,6 +15,7 @@ import { FallFloor } from './entities/FallFloor';
 import { NudgeSystem } from './systems/NudgeSystem';
 import { CheckpointSystem } from './systems/CheckpointSystem';
 import { WinConditionSystem } from './systems/WinConditionSystem';
+import { DRAIN_Y_THRESHOLD } from './constants';
 
 export class Simulation {
   public physicsWorld: PhysicsWorld;
@@ -135,6 +136,15 @@ export class Simulation {
   }
 
   /**
+   * Removes a static body from the physics world and the staticBodies array.
+   * Used by SectorChunkManager and AbyssGenerator for proper chunk cleanup.
+   */
+  removeStaticBody(body: RAPIER.RigidBody): void {
+    this.physicsWorld.removeRigidBody(body);
+    this.staticBodies = this.staticBodies.filter((b) => b !== body);
+  }
+
+  /**
    * Simulates a single frame step.
    * Executes inputs for the current frame, steps Rapier, updates heights, and processes resets.
    */
@@ -179,7 +189,9 @@ export class Simulation {
         const leftFlippers = this.flippers.filter((f) => f.side === 'left');
         leftFlippers.forEach((f) => f.setInput(input.phase === 'down'));
         if (input.phase === 'down') {
-          this.eventBus.emit('FlipperStruck', { side: 'left', angularVelocity: 30.0 });
+          // Read actual angular velocity from the flipper body per TDD §6
+          const angVel = leftFlippers.length > 0 ? leftFlippers[0].body.angvel() : 30.0;
+          this.eventBus.emit('FlipperStruck', { side: 'left', angularVelocity: angVel });
           if (this.anchor.isAttached()) {
             this.anchor.detach();
           }
@@ -190,7 +202,9 @@ export class Simulation {
         const rightFlippers = this.flippers.filter((f) => f.side === 'right');
         rightFlippers.forEach((f) => f.setInput(input.phase === 'down'));
         if (input.phase === 'down') {
-          this.eventBus.emit('FlipperStruck', { side: 'right', angularVelocity: -30.0 });
+          // Read actual angular velocity from the flipper body per TDD §6
+          const angVel = rightFlippers.length > 0 ? rightFlippers[0].body.angvel() : -30.0;
+          this.eventBus.emit('FlipperStruck', { side: 'right', angularVelocity: angVel });
           if (this.anchor.isAttached()) {
             this.anchor.detach();
           }
@@ -217,7 +231,8 @@ export class Simulation {
     // 2. Step the Rapier physics world
     this.physicsWorld.step();
     this.frameIndex++;
-    this.elapsedTimeMs += 16.666; // Approx 1 frame duration at 60fps
+    // Fixed 1/60s timestep per TDD §9 — exactly 1000/60 ms per step
+    this.elapsedTimeMs += 1000 / 60;
 
     // 3. Resolve active bumper colliders collision bounce impulses
     if (this.ball) {
@@ -232,15 +247,10 @@ export class Simulation {
       });
     }
 
-    // 4. Update one-way catch floors
+    // 4. Update one-way catch floors (pass current time for 2-second active duration)
     this.fallFloors.forEach((floor) => {
-      floor.update(this.ball);
+      floor.update(this.ball, this.elapsedTimeMs);
     });
-
-    // 4.5. Regenerate nudge charges over time (1 charge every 3 seconds / 180 frames)
-    if (this.frameIndex % 180 === 0 && this.playerState.nudgeCharges < 3) {
-      this.playerState.nudgeCharges++;
-    }
 
     // 5. Height metrics tracking & drain detection
     if (this.ball) {
@@ -263,8 +273,8 @@ export class Simulation {
         this.isWon = true;
       }
 
-      // Drain check: reset to last checkpoint if ball falls below vertical bounds
-      if (pos.y < -1.5) {
+      // Drain check: reset to last checkpoint if ball falls below vertical bounds (TDD §7.2)
+      if (pos.y < DRAIN_Y_THRESHOLD) {
         const fallenY = pos.y;
         if (this.anchor.isAttached()) {
           this.anchor.detach();

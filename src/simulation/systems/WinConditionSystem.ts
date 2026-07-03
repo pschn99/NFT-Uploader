@@ -3,18 +3,18 @@ import { EventBus } from '../EventBus';
 import { SimulationEvents } from '../events';
 
 export class WinConditionSystem {
-  public static WIN_HEIGHT_METRES = 500.0; // Tower height threshold
-
   /**
-   * Checks if the ball reached the top exit gate of Sector 0.
+   * Checks if the ball reached the top exit gate of the current sector.
+   * Uses a configurable win height (from level data) instead of a hardcoded constant.
    */
   static check(
     ball: Ball,
     eventBus: EventBus<SimulationEvents>,
-    elapsedTimeMs: number
+    elapsedTimeMs: number,
+    winHeightMetres = 500.0
   ): boolean {
     const ballPos = ball.body.translation();
-    if (ballPos.y >= this.WIN_HEIGHT_METRES) {
+    if (ballPos.y >= winHeightMetres) {
       eventBus.emit('WinConditionMet', {
         finalPosition: { x: ballPos.x, y: ballPos.y },
         clearTimeMs: elapsedTimeMs

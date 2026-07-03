@@ -16,8 +16,8 @@ export class SectorChunkManager {
   // Maps wall index in allWalls array to spawned physics rigid body
   private spawnedWalls = new Map<number, RAPIER.RigidBody>();
 
-  // Buffer range: 40 meters around active ball Y height
-  private loadRange = 40.0;
+  // Buffer range: 120 meters around active ball Y height (covers a reasonable portion of the sector)
+  private loadRange = 120.0;
 
   constructor(simulation: Simulation, walls: WallData[]) {
     this.simulation = simulation;
@@ -47,21 +47,18 @@ export class SectorChunkManager {
         );
         this.spawnedWalls.set(idx, body);
       } else if (!inRange && isSpawned) {
-        // Unload wall body from simulation
+        // Unload wall body from simulation via proper API (TDD §1 principle)
         const body = this.spawnedWalls.get(idx)!;
-        this.simulation.physicsWorld.removeRigidBody(body);
-
-        // Clean from staticBodies array
-        this.simulation.staticBodies = this.simulation.staticBodies.filter((b) => b !== body);
+        this.simulation.removeStaticBody(body);
         this.spawnedWalls.delete(idx);
       }
     });
   }
 
   destroy(): void {
-    // Unload all spawned walls on destruction
+    // Unload all spawned walls on destruction via proper API
     this.spawnedWalls.forEach((body) => {
-      this.simulation.physicsWorld.removeRigidBody(body);
+      this.simulation.removeStaticBody(body);
     });
     this.spawnedWalls.clear();
     this.allWalls = [];

@@ -10,9 +10,10 @@ import { HUD } from '../hud/HUD';
 import { SectorTransition } from '../transitions/SectorTransition';
 import { SectorChunkManager } from '../../tower/SectorChunkManager';
 import { AudioSystem } from '../../audio/AudioSystem';
-
-// Import sector_00 from the levels folder
-import sector00 from '../../../levels/campaign/sector_00.json';
+import { CampaignManager, ABYSS_SECTOR_INDEX } from '../../tower/CampaignManager';
+import { TestPlayContext } from './CreatorTestPlay';
+import { AbyssGenerator } from '../../simulation/systems/AbyssGenerator';
+import { LevelData } from '../../levels/LevelData';
 
 export class GameScene extends Phaser.Scene {
   private session!: GameSession;
@@ -24,39 +25,38 @@ export class GameScene extends Phaser.Scene {
   
   // Milestone 2 HUD, Chunk, and Audio components
   private hud!: HUD;
-  private chunkManager!: SectorChunkManager;
+  private chunkManager: SectorChunkManager | null = null;
   private audioSystem!: AudioSystem;
+  private abyssGenerator: AbyssGenerator | null = null;
 
   private exportKey!: Phaser.Input.Keyboard.Key;
   private resetKey!: Phaser.Input.Keyboard.Key;
   private escapeKey!: Phaser.Input.Keyboard.Key;
   private winQueued = false;
 
+  private testPlayContext: TestPlayContext | null = null;
+  private currentSectorIndex = 0;
+  private campaignManager = new CampaignManager();
+
   constructor() {
     super('GameScene');
+  }
+
+  init(data?: { creatorTestPlay?: TestPlayContext; sectorIndex?: number }) {
+    if (data && data.creatorTestPlay) {
+      this.testPlayContext = data.creatorTestPlay;
+      this.currentSectorIndex = -1;
+    } else {
+      this.testPlayContext = null;
+      this.currentSectorIndex = data?.sectorIndex ?? 0;
+    }
   }
 
   create() {
     // 1. Play fade-in transition
     SectorTransition.fadeIn(this);
 
-    // 2. Create a fresh GameSession (physics + state managers)
-    this.session = new GameSession();
-
-    // 3. Load level layout and initialize chunk manager
-    this.chunkManager = SectorLoader.load(this.session.simulation, sector00);
-
-    // 4. Create core bridges
-    this.inputBuffer = new InputBuffer();
-    this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation);
-    this.visualRenderer = new PhaserRenderer(this, this.session.simulation);
-    this.cameraController = new CameraController(this.cameras.main, this.session.simulation.ball);
-    this.replaySystem = new ReplaySystem(this.session);
-
-    // 5. Instantiate HUD overlay
-    this.hud = new HUD(this);
-
-    // 6. Setup developer & control keys
+    // 2. Setup developer & control keys
     const k = this.input.keyboard;
     if (k) {
       this.exportKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.P);
@@ -64,14 +64,92 @@ export class GameScene extends Phaser.Scene {
       this.escapeKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     }
 
-    // 7. Instantiate and wire AudioSystem
-    this.audioSystem = new AudioSystem(this.session.simulation.eventBus);
-    this.input.once('pointerdown', () => this.audioSystem.init());
-    this.input.keyboard?.once('keydown', () => this.audioSystem.init());
-
     this.winQueued = false;
+    this.chunkManager = null;
+    this.abyssGenerator = null;
 
-    console.log('Milestone 2 Game Sandbox Scene loaded.');
+    // 3. Load appropriate level data dynamically
+    if (this.testPlayContext) {
+      this.setupSimulation(this.testPlayContext.levelData);
+    } else if (this.currentSectorIndex >= ABYSS_SECTOR_INDEX) {
+      this.setupAbyssSimulation();
+    } else {
+      void this.loadCampaignSector(this.currentSectorIndex);
+    }
+  }
+
+  private async loadCampaignSector(index: number) {
+    try {
+      const levelData = await this.campaignManager.loadSector(index);
+      this.setupSimulation(levelData);
+    } catch (err) {
+      console.error('Failed to load campaign sector:', err);
+      this.scene.start('MenuScene');
+    }
+  }
+
+  private setupSimulation(levelData: LevelData) {
+    // 1. Create a fresh GameSession (physics + state managers)
+    this.session = new GameSession();
+
+    // 2. Load level layout and initialize chunk manager
+    this.chunkManager = SectorLoader.load(this.session.simulation, levelData);
+
+    // 3. Create core bridges
+    this.inputBuffer = new InputBuffer();
+    this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation);
+    this.visualRenderer = new PhaserRenderer(this, this.session.simulation);
+    this.cameraController = new CameraController(this.cameras.main, this.session.simulation.ball);
+    this.replaySystem = new ReplaySystem(this.session);
+
+    // 4. Instantiate HUD overlay
+    this.hud = new HUD(this);
+
+    // 5. Instantiate and wire AudioSystem
+    this.audioSystem = new AudioSystem(this.session.simulation.eventBus);
+    this.input.once('pointerdown', () => this.audioSystem?.init());
+    this.input.keyboard?.once('keydown', () => this.audioSystem?.init());
+
+    // 6. Show title card and camera flash (per GDD §7: full-screen inversion + title card)
+    const card = CampaignManager.getTitleCard(this.currentSectorIndex);
+    SectorTransition.showTitleCard(this, card.name, card.tagline);
+    SectorTransition.fadeIn(this);
+
+    console.log(`Campaign simulation loaded: ${levelData.name} (Sector ${this.currentSectorIndex})`);
+  }
+
+  private setupAbyssSimulation() {
+    // 1. Create GameSession
+    this.session = new GameSession();
+
+    // Spawn ball at standard position
+    this.session.simulation.setBall(9.125, 2.0);
+
+    // 2. Initialize Abyss generator starting at Y=0
+    this.abyssGenerator = new AbyssGenerator(this.session.simulation, Date.now(), 0);
+    this.abyssGenerator.update(2.0);
+
+    // 3. Create core bridges
+    this.inputBuffer = new InputBuffer();
+    this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation);
+    this.visualRenderer = new PhaserRenderer(this, this.session.simulation);
+    this.cameraController = new CameraController(this.cameras.main, this.session.simulation.ball);
+    this.replaySystem = new ReplaySystem(this.session);
+
+    // 4. Instantiate HUD overlay
+    this.hud = new HUD(this);
+
+    // 5. Instantiate and wire AudioSystem
+    this.audioSystem = new AudioSystem(this.session.simulation.eventBus);
+    this.input.once('pointerdown', () => this.audioSystem?.init());
+    this.input.keyboard?.once('keydown', () => this.audioSystem?.init());
+
+    // 6. Show title card and camera flash (per GDD §7: full-screen inversion + title card)
+    const card = CampaignManager.getTitleCard(this.currentSectorIndex);
+    SectorTransition.showTitleCard(this, card.name, card.tagline);
+    SectorTransition.fadeIn(this);
+
+    console.log('Abyss simulation loaded.');
   }
 
   update() {
@@ -81,11 +159,32 @@ export class GameScene extends Phaser.Scene {
     if (this.session.simulation.isWon) {
       if (!this.winQueued) {
         this.winQueued = true;
-        this.inputBridge.destroy(); // Disable further inputs
+        if (this.inputBridge) this.inputBridge.destroy(); // Disable further inputs
 
         this.time.delayedCall(3000, () => {
           SectorTransition.fadeOut(this, 800, () => {
-            this.scene.start('MenuScene');
+            if (this.testPlayContext) {
+              this.testPlayContext.onEnd({ cleared: true, replaySystem: this.replaySystem });
+            } else {
+              // Progression & next sector wiring
+              const nextSectorIndex = this.currentSectorIndex + 1;
+              const app = (this.game as any).appInstance;
+              if (app && app.saveSystem) {
+                app.saveSystem.recordSectorCleared(this.currentSectorIndex).catch((err: any) => {
+                  console.error('Failed to record sector clear:', err);
+                });
+                app.saveSystem.recordSectorReached(nextSectorIndex).catch((err: any) => {
+                  console.error('Failed to record sector reached:', err);
+                });
+              }
+
+              if (CampaignManager.isCampaignSector(nextSectorIndex)) {
+                this.scene.start('GameScene', { sectorIndex: nextSectorIndex });
+              } else {
+                // All campaign sectors cleared! Go to the Abyss!
+                this.scene.start('GameScene', { sectorIndex: ABYSS_SECTOR_INDEX });
+              }
+            }
           });
         });
       }
@@ -97,7 +196,11 @@ export class GameScene extends Phaser.Scene {
     // A. Handle Escape key to return to menu
     if (Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
       SectorTransition.fadeOut(this, 300, () => {
-        this.scene.start('MenuScene');
+        if (this.testPlayContext) {
+          this.testPlayContext.onEnd({ cleared: false });
+        } else {
+          this.scene.start('MenuScene');
+        }
       });
       return;
     }
@@ -124,7 +227,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // C. Input buffer bridge updates
-    this.inputBridge.update();
+    if (this.inputBridge) this.inputBridge.update();
 
     // D. Pull frame entries, record to ReplaySystem, and step physics
     const currentFrame = this.session.simulation.frameIndex;
@@ -134,9 +237,22 @@ export class GameScene extends Phaser.Scene {
       this.replaySystem.recordInput(input.action, input.phase, input.value);
     });
 
-    // Update chunk manager with current ball height before physics step
+    // Update chunk manager / abyss generator with current ball height before physics step
     if (this.session.simulation.ball) {
-      this.chunkManager.update(this.session.simulation.ball.getPosition().y);
+      const ballY = this.session.simulation.ball.getPosition().y;
+      if (this.chunkManager) {
+        this.chunkManager.update(ballY);
+      }
+      if (this.abyssGenerator) {
+        this.abyssGenerator.update(ballY);
+        // Persist Abyss PB depth
+        const app = (this.game as any).appInstance;
+        if (app && app.saveSystem) {
+          app.saveSystem.updateAbyssPersonalBest(ballY).catch((err: any) => {
+            console.error('Failed to update Abyss PB:', err);
+          });
+        }
+      }
     }
 
     // Step physics
@@ -156,6 +272,8 @@ export class GameScene extends Phaser.Scene {
     if (this.visualRenderer) this.visualRenderer.destroy();
     if (this.hud) this.hud.destroy();
     if (this.chunkManager) this.chunkManager.destroy();
+    if (this.abyssGenerator) this.abyssGenerator.destroy();
+    if (this.audioSystem) this.audioSystem.destroy();
     if (this.session) this.session.destroy();
   }
 }

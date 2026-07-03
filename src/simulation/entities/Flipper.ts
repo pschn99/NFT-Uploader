@@ -14,7 +14,7 @@ export class Flipper {
   private stiffness = 2000.0;
   private damping = 50.0;
   
-  private targetSpeed = 45.0; // rad/s stroke velocity
+  private targetSpeed = 30.0; // rad/s stroke velocity (validated in M0.5 spike verdict: 5/5 rating)
   private velocityDamping = 300.0; // high gain for arcade-like snappy solenoid flips
 
   constructor(

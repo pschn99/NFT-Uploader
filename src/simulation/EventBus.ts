@@ -1,4 +1,5 @@
-export class EventBus<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class EventBus<T extends Record<string, any>> {
   private listeners: { [K in keyof T]?: Array<(data: T[K]) => void> } = {};
 
   emit<K extends keyof T>(event: K, data: T[K]): void {

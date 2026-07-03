@@ -1,10 +1,11 @@
 import RAPIER from '@dimforge/rapier2d-compat';
 import { PhysicsWorld } from '../PhysicsWorld';
+import { BALL_RADIUS } from '../constants';
 
 export class Ball {
   public body: RAPIER.RigidBody;
   public collider: RAPIER.Collider;
-  public radius = 0.35; // 0.35m radius
+  public radius = BALL_RADIUS; // Per TDD §5.1
 
   constructor(physicsWorld: PhysicsWorld, x: number, y: number, restitution = 0.5) {
     const bodyDesc = RAPIER.RigidBodyDesc.dynamic()

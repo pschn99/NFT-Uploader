@@ -4,8 +4,7 @@ import { EventBus } from '../EventBus';
 import { SimulationEvents } from '../events';
 
 export class NudgeSystem {
-  private static NUDGE_IMPULSE_X = 3.5; // Horizontal push force
-  private static NUDGE_IMPULSE_Y = 0.8; // Minor vertical lift to break friction
+  private static NUDGE_IMPULSE_X = 3.5; // Horizontal push force per TDD §5.3
 
   /**
    * Applies nudge momentum in the specified direction.
@@ -23,8 +22,9 @@ export class NudgeSystem {
 
     playerState.nudgeCharges--;
 
+    // Purely horizontal correction per TDD §5.3 — y component is 0
     const fx = direction === 'left' ? -this.NUDGE_IMPULSE_X : this.NUDGE_IMPULSE_X;
-    ball.body.applyImpulse({ x: fx, y: this.NUDGE_IMPULSE_Y }, true);
+    ball.body.applyImpulse({ x: fx, y: 0 }, true);
 
     eventBus.emit('NudgeFired', {
       direction,

@@ -15,8 +15,7 @@
  */
 
 import { Simulation } from '../Simulation';
-import { getBlockDescriptor } from '../../levels/BlockRegistry';
-import { GRID_CELL_METRES } from '../constants';
+import { GRID_CELL_METRES, BUMPER_RADIUS } from '../constants';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -33,12 +32,6 @@ const SLOPE_HX = 3.56;
 const SLOPE_HY = 0.2;
 const SLOPE_ROTATION = 0.45;
 const WALL_HX = 0.25;
-
-// Bumper radius from registry default
-const BUMPER_RADIUS = (() => {
-  const desc = getBlockDescriptor('bumper_standard');
-  return desc.defaultCollider.shape === 'ball' ? desc.defaultCollider.radius : 0.6;
-})();
 
 // ---------------------------------------------------------------------------
 // Types
@@ -108,13 +101,8 @@ export class AbyssGenerator {
     this.chunks = this.chunks.filter((chunk) => {
       if (chunk.topY + CHUNK_HEIGHT_M < unloadThreshold) {
         for (const body of chunk.bodies) {
-          this.simulation.physicsWorld.removeRigidBody(body);
+          this.simulation.removeStaticBody(body);
         }
-        // Also clean from simulation.staticBodies
-        const chunkBodySet = new Set(chunk.bodies);
-        this.simulation.staticBodies = this.simulation.staticBodies.filter(
-          (b) => !chunkBodySet.has(b)
-        );
         return false;
       }
       return true;
@@ -128,7 +116,7 @@ export class AbyssGenerator {
   destroy(): void {
     for (const chunk of this.chunks) {
       for (const body of chunk.bodies) {
-        this.simulation.physicsWorld.removeRigidBody(body);
+        this.simulation.removeStaticBody(body);
       }
     }
     this.chunks = [];
