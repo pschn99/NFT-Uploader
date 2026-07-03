@@ -1,34 +1,36 @@
-import { StorageProvider } from './core/StorageProvider';
+/**
+ * Application — composition root for PINBALLZZZ.
+ *
+ * Owns the single shared `StorageProvider` instance and creates all
+ * top-level systems (SettingsSystem, SaveSystem). `GameSession` is created
+ * and destroyed per run, not here.
+ *
+ * Architecture: Application → StorageProvider, SettingsSystem, SaveSystem.
+ * No Phaser, no simulation imports — those live in render/ and simulation/.
+ */
 
-export class SaveSystem {
-  constructor(private storage: StorageProvider) {}
-
-  async initialize(): Promise<void> {
-    console.log('SaveSystem initialized stub with storage provider:', this.storage);
-  }
-}
-
-export class SettingsSystem {
-  constructor(private storage: StorageProvider) {}
-
-  async initialize(): Promise<void> {
-    console.log('SettingsSystem initialized stub with storage provider:', this.storage);
-  }
-}
+import { StorageProviderFactory } from './core/StorageProviderFactory';
+import { SettingsSystem } from './core/SettingsSystem';
+import { SaveSystem } from './save/SaveSystem';
+import type { StorageProvider } from './core/StorageProvider';
 
 export class Application {
-  public saveSystem: SaveSystem;
-  public settingsSystem: SettingsSystem;
+  public readonly storage: StorageProvider;
+  public readonly settingsSystem: SettingsSystem;
+  public readonly saveSystem: SaveSystem;
 
-  constructor(private storage: StorageProvider) {
-    this.saveSystem = new SaveSystem(this.storage);
+  constructor() {
+    this.storage = StorageProviderFactory.create();
     this.settingsSystem = new SettingsSystem(this.storage);
+    this.saveSystem = new SaveSystem(this.storage);
   }
 
+  /** Initialise all persistent systems. Must be awaited before showing any UI. */
   async boot(): Promise<void> {
-    console.log('Application booting...');
-    await this.saveSystem.initialize();
-    await this.settingsSystem.initialize();
-    console.log('Application boot complete');
+    await Promise.all([
+      this.settingsSystem.initialize(),
+      this.saveSystem.initialize(),
+    ]);
   }
 }
+

@@ -1,6 +1,6 @@
 import RAPIER from '@dimforge/rapier2d-compat';
 import { GameSession } from '../src/simulation/session/GameSession';
-import { SectorLoader, SectorData } from '../src/tower/SectorLoader';
+import { SectorLoader } from '../src/tower/SectorLoader';
 import { InputBuffer } from '../src/core/InputBuffer';
 import { ReplayHash } from '../src/replay/ReplayHash';
 import { InputEntry } from '../src/types/input';
@@ -85,7 +85,7 @@ async function generateAll() {
     const session = new GameSession();
     
     // Load sector chunk manager
-    const chunkManager = SectorLoader.load(session.simulation, sector00 as SectorData);
+    const chunkManager = SectorLoader.load(session.simulation, sector00);
 
     const inputBuffer = new InputBuffer();
     inputBuffer.setAllEntries(schedule.inputs);

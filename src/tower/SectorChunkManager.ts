@@ -32,7 +32,8 @@ export class SectorChunkManager {
     const maxY = ballY + this.loadRange;
 
     this.allWalls.forEach((wall, idx) => {
-      const inRange = wall.y >= minY && wall.y <= maxY;
+      // Check if the wall's vertical span overlaps the active load range
+      const inRange = (wall.y - wall.hy <= maxY) && (wall.y + wall.hy >= minY);
       const isSpawned = this.spawnedWalls.has(idx);
 
       if (inRange && !isSpawned) {

@@ -1,0 +1,337 @@
+{
+  "seed": 12345,
+  "durationFrames": 1800,
+  "inputs": [
+    {
+      "frame": 5,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 6,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 7,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 8,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 9,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 10,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 11,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 12,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 13,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 14,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 15,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 16,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 17,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 18,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 19,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 20,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 21,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 22,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 23,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 24,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 25,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 26,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 27,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 28,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 29,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 30,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 31,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 32,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 33,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 34,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 35,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 36,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 37,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 38,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 39,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 40,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 41,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 42,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 43,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 44,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 45,
+      "action": "plunger",
+      "phase": "up"
+    },
+    {
+      "frame": 104,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 119,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 207,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 222,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 310,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 325,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 413,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 428,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 516,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 531,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 619,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 634,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 722,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 737,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 767,
+      "action": "nudge_left",
+      "phase": "down"
+    },
+    {
+      "frame": 825,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 840,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 928,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 943,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 1031,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1046,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 1134,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1149,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 1237,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1252,
+      "action": "flipper_left",
+      "phase": "up"
+    }
+  ],
+  "expectedHash": "a8901a3b"
+}

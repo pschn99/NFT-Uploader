@@ -237,6 +237,11 @@ export class Simulation {
       floor.update(this.ball);
     });
 
+    // 4.5. Regenerate nudge charges over time (1 charge every 3 seconds / 180 frames)
+    if (this.frameIndex % 180 === 0 && this.playerState.nudgeCharges < 3) {
+      this.playerState.nudgeCharges++;
+    }
+
     // 5. Height metrics tracking & drain detection
     if (this.ball) {
       const pos = this.ball.getPosition();

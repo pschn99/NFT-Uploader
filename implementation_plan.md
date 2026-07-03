@@ -240,7 +240,17 @@ M0 (Scaffold + P0 Spikes)
 
 **Goal:** Creator Studio MVP operational. Campaign Sectors 1–5 authored. Abyss live. Playability Check with `verifier: "local"`. Replay CI at 30.
 
-**Estimate:** ~18 d
+**Estimate:** ~18 d (+3 d content buffer = ~21 d planning ceiling)
+
+> [!IMPORTANT]
+> **M3 Pre-conditions (must be true before starting):**
+> - M2 exit criteria verified: full Sector 0 clear, 5-replay CI green, perf smoke green.
+> - `SectorLoader` parses raw campaign JSON. `SectorChunkManager` manages wall bodies. `CheckpointSystem`, `WinConditionSystem` operational.
+> - `StorageProvider` interface defined and `BrowserStorageProvider` + `MemoryStorageProvider` exist in `src/core/`.
+> - `electron/preload.ts` currently only exposes `{ platform, isElectron }` — **IPC for file dialogs must be wired in M3**.
+> - `sector_03.json` exists as a hand-authored JSON stub (M2.5) but has no `format_version` field yet — must migrate to Format v3 in 3.1.5.
+
+---
 
 ### Creator Studio MVP Definition (v1.0 scope boundary)
 
@@ -258,38 +268,113 @@ M0 (Scaffold + P0 Spikes)
 - Workshop upload, online browse, thumbnail generation
 - Collaborative editing
 
-### 3.1 Creator Studio Core
-- `[ ]` **[NEW]** `src/levels/BlockRegistry.ts` — Block definition registry containing physics collider shapes and category parameters, keeping simulation decoupling clean from rendering code **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/render/scenes/CreatorGrid.ts` — grid, snap logical layout, block snap-on-drag, palette selection **(M, 3.0d)**
-- `[ ]` **[NEW]** `src/render/scenes/CreatorTestPlay.ts` — snapshot creation of world state, run simulation session, restore editor state cycle **(M, 1.5d)**
-- `[ ]` **[NEW]** Creator File Dialog Storage — Electron fs `dialog` implementation of `StorageProvider` interface; default path `~/Documents/PINBALLZZZ/levels/` **(M, 1.0d)**
-- `[ ]` **[NEW]** `src/render/scenes/CreatorScene.ts` — Phaser scene composition, user interface overlay rendering, input orchestration **(M, 2.0d)**
-- `[ ]` **[NEW]** `src/levels/serialize.ts` & `migrate.ts` — Format v3 with `playability_check.verifier` and `level_hash` fields **(S, 0.75d)**
-- `[ ]` **[NEW]** `tests/levels/` — Migration + round-trip tests **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/core/SettingsSystem.ts` & `src/save/SaveSystem.ts` **(S, 0.25d)**
-- `[ ]` **[NEW]** `src/core/StorageProvider.ts` — Wire StorageProvider factory injection, test interface swap between BrowserStorageProvider and ElectronStorageProvider **(S, 0.5d)**
+---
 
-### 3.2 Playability Check & Campaign Content
-- `[ ]` **[NEW]** `src/replay/PlayabilityCheck.ts` — Client re-sim; stamps `{ verified, verifier: "local", level_hash, replay_hash, replay_engine_version }` **(S, 0.5d)**
-- `[ ]` **[NEW]** `levels/campaign/sector_01.json` … `sector_05.json` — Authored in Creator Studio (layout design and Win Condition exit placement) **(M, 3.5d)**
-- `[ ]` **[NEW]** `src/simulation/systems/AbyssGenerator.ts` — Generates chunks on demand using `BlockRegistry` (neutral layer) **(S, 0.75d)**
-- `[ ]` **[NEW]** Multi-sector campaign transition wiring **(S, 0.25d)**
+### 3.1 Level Serialization & Migration Foundation
 
-### 3.3 Replay CI + Perf (target: 30 replays)
-- `[ ]` **[NEW]** `tools/replay-runner/index.ts` — Standalone execution script optimized with parallel workers (no Jest overhead) **(S, 0.5d)**
-- `[ ]` **[NEW]** Expand `tests/replays/` to 30 files **(M, 1.0d)**
-- `[ ]` **[NEW]** `tests/perf/chunk-unload.test.ts` — Sector transition drops stale bodies **(S, 0.25d)**
-- `[ ]` **[NEW]** `tests/perf/level-load.test.ts` — Largest sector loads + migrates < 250 ms **(S, 0.25d)**
-- `[ ]` **[NEW]** `tests/perf/memory.test.ts` — Automated heap profile test tracking memory usage during full campaign run **(S, 0.5d)**
-- `[ ]` **[MODIFY]** `.github/workflows/ci.yml` — Parallelized replay regression run on every PR **(S, 0.25d)**
-- `[ ]` **[NEW]** `tests/creator/playability-export.test.ts` — Automated integration test for Creator Studio level generation -> Playability Check -> serialised export round-trip **(S, 0.5d)**
+> Must land first — all subsequent Creator Studio work depends on a stable level data contract.
+
+- `[ ]` **3.1.1 [NEW]** `src/levels/LevelData.ts` — TypeScript type definitions for Format v3: `LevelData`, `BlockEntry`, `PlayabilityCheckStamp`. Derive `SectorData` (`SectorLoader` interface) as a subset for backward compatibility. **(S, 0.5d)**
+- `[ ]` **3.1.2 [NEW]** `src/levels/serialize.ts` — `serializeLevel(data: LevelData): string` (JSON.stringify + format_version: 3) and `deserializeLevel(raw: string): LevelData` (parse + validate top-level shape). **(S, 0.25d)**
+- `[ ]` **3.1.3 [NEW]** `src/levels/migrate.ts` — `migrateToLatest(data: unknown): LevelData`; migrations v1→v2 and v2→v3 (add `format_version`, restructure blocks array from legacy campaign JSON wall/flipper/bumper flat lists). **(S, 0.5d)**
+- `[ ]` **3.1.4 [MODIFY]** `src/tower/SectorLoader.ts` — Call `migrateToLatest()` before parsing. Retain existing `SectorData` interface; bridge Format v3 blocks to it internally. **(S, 0.25d)**
+- `[ ]` **3.1.5 [MODIFY]** `levels/campaign/sector_00.json` & `sector_03.json` — Add `format_version: 3`, convert to Format v3 blocks array representation. **(S, 0.25d)**
+- `[ ]` **3.1.6 [NEW]** `tests/levels/migrate.test.ts` — Unit tests: v1→v3 and v2→v3 migrations produce valid `LevelData`; `deserializeLevel(serializeLevel(x)) === x` round-trip. **(S, 0.25d)**
+
+### 3.2 BlockRegistry
+
+- `[ ]` **3.2.1 [NEW]** `src/levels/BlockRegistry.ts` — Block type key → `{ colliderShape: ColliderDesc, category: BlockCategory, snapAngles?: number[] }`. Initial types: `wall`, `flipper_left`, `flipper_right`, `bumper_standard`, `plunger`, `checkpoint`, `exit`. Lives in `src/levels/` (neutral layer — no Phaser imports). **(S, 0.5d)**
+- `[ ]` **3.2.2 [MODIFY]** `src/simulation/systems/AbyssGenerator.ts` (stub from M2 plan) — Wire to `BlockRegistry` for chunk generation. Generates 100 m chunks on demand using `mulberry32` RNG. **(S, 0.75d)**
+
+### 3.3 Electron IPC — File Dialog Bridge
+
+> `electron/preload.ts` currently only exposes `{ platform, isElectron }`. Creator Studio file I/O requires native `dialog` IPC.
+
+- `[ ]` **3.3.1 [MODIFY]** `electron/main.ts` — Add `ipcMain.handle('dialog:saveFile', ...)` and `ipcMain.handle('dialog:openFile', ...)` handlers using `dialog.showSaveDialog` / `dialog.showOpenDialog` + `fs.writeFile` / `fs.readFile`. Default save path: `~/Documents/PINBALLZZZ/levels/`. **(S, 0.5d)**
+- `[ ]` **3.3.2 [MODIFY]** `electron/preload.ts` — Expose `electronAPI.saveFileDialog(name, data)` and `electronAPI.loadFileDialog()` via `contextBridge`. **(S, 0.25d)**
+- `[ ]` **3.3.3 [NEW]** `src/core/ElectronStorageProvider.ts` — Implements `StorageProvider` (including optional `saveFileDialog?` / `loadFileDialog?` methods) by calling `window.electronAPI`. Falls back gracefully when running in browser/headless. **(S, 0.5d)**
+- `[ ]` **3.3.4 [MODIFY]** `src/core/StorageProviderFactory.ts` — Detect `window.electronAPI?.isElectron` and return `ElectronStorageProvider`; otherwise fall back to `BrowserStorageProvider`. **(S, 0.25d)**
+
+### 3.4 SettingsSystem & SaveSystem (promote from stubs)
+
+> Both currently live as stubs inside `src/application.ts`. Extract to proper modules per TDD §3.1 architecture.
+
+- `[ ]` **3.4.1 [NEW]** `src/core/SettingsSystem.ts` — Keybinding map, audio volume, display settings. Persistent via `StorageProvider.save('settings', ...)`. Exposes typed `Settings` interface. **(S, 0.5d)**
+- `[ ]` **3.4.2 [NEW]** `src/save/SaveSystem.ts` — Campaign progress (highest sector cleared, checkpoint Y per sector), ball skin unlocks. Persistent via `StorageProvider.save('save', ...)`. **(S, 0.5d)**
+- `[ ]` **3.4.3 [MODIFY]** `src/application.ts` — Remove inline stubs; import from `src/core/SettingsSystem.ts` and `src/save/SaveSystem.ts`. Wire `StorageProviderFactory.create()` at boot. **(S, 0.25d)**
+
+### 3.5 Creator Studio Core — Grid, Palette & Scene
+
+- `[ ]` **3.5.1 [NEW]** `src/render/scenes/CreatorScene.ts` — Top-level Phaser scene. Manages sub-component lifecycle, toolbar UI overlay, keyboard shortcuts (`Ctrl+S` save, `Ctrl+O` load, `T` test-play), and scene transitions to/from `GameScene` for Test Play. **(M, 2.0d)**
+- `[ ]` **3.5.2 [NEW]** `src/render/creator/CreatorGrid.ts` — 32×32 logical grid overlay. Handles block placement on drag-end snap, block deletion on right-click, and grid coordinate → world-metre conversion. Uses `BlockRegistry` for collider preview shapes. Renders using Phaser `Graphics` (no Phaser game state ownership). **(M, 3.0d)**
+- `[ ]` **3.5.3 [NEW]** `src/render/creator/BlockPalette.ts` — Sidebar palette UI listing all `BlockRegistry` types. Handles selection state. Flipper blocks cycle through 6 snap angles on repeated placement or via rotate shortcut. **(S, 0.75d)**
+- `[ ]` **3.5.4 [NEW]** `src/render/creator/CreatorHUD.ts` — Toolbar: Save, Load, Test Play, Export + Playability Check buttons; block count indicator; unsaved-changes indicator. **(S, 0.5d)**
+- `[ ]` **3.5.5 [NEW]** `src/render/scenes/CreatorTestPlay.ts` — Snapshots the current `LevelData` state from the grid, boots a `GameSession` from it, launches `GameScene`. On session end (win/drain/escape), destroys the session and restores `CreatorScene` with the original snapshot. **(M, 1.5d)**
+
+### 3.6 Playability Check
+
+- `[ ]` **3.6.1 [NEW]** `src/replay/PlayabilityCheck.ts` — Accepts a `LevelData` + a recorded `ReplaySystem` replay. Re-simulates headlessly in a fresh Rapier world (no Phaser). If win condition reached: stamps `playability_check: { verified: true, verifier: "local", level_hash, replay_hash, replay_engine_version }` on the level JSON. If not cleared: returns `{ verified: false }`. Level hash = SHA-256 of canonical JSON (blocks sorted, no stamp field). **(S, 0.75d)**
+- `[ ]` **3.6.2 [MODIFY]** `src/render/creator/CreatorHUD.ts` — Wire Export button: trigger `PlayabilityCheck`, show inline progress UI, then invoke `StorageProvider.saveFileDialog()` on success. Block export if `verified: false`. **(S, 0.5d)**
+- `[ ]` **3.6.3** Verify `verifier` UI rule: search for any `"Clear Badge"` or `verifier` display in `HUD.ts`, `MenuScene.ts`, `GameScene.ts` — ensure `verifier: "local"` never renders a badge. Add a comment anchor `// VERIFIER_BADGE_RULE` where the check lives. **(S, 0.25d)**
+
+### 3.7 Campaign Content — Sectors 1–5
+
+> Author in Creator Studio using Format v3. Each sector must have: flippers at canonical pivot positions, bumpers, checkpoint every 100 m, and an exit block.
+
+- `[ ]` **3.7.1 [NEW]** `levels/campaign/sector_01.json` — **The Shaft**: narrow corridors, tight flipper angles (~500 m). **(S, 0.75d)**
+- `[ ]` **3.7.2 [NEW]** `levels/campaign/sector_02.json` — **The Bumper Garden**: dense bumper fields, chain reactions (~500 m). **(S, 0.75d)**
+- `[ ]` **3.7.3 [MODIFY]** `levels/campaign/sector_03.json` — **The Plunger Vault**: promote existing stub to full ~300 m layout using Creator Studio. Ensure Format v3 migration applied (3.1.5 prerequisite). **(S, 0.5d)**
+- `[ ]` **3.7.4 [NEW]** `levels/campaign/sector_04.json` — **The Negative Space**: sparse geometry, silhouette-only (~500 m). **(S, 0.75d)**
+- `[ ]` **3.7.5 [NEW]** `levels/campaign/sector_05.json` — **The Storm**: high-speed, tight timing windows (~500 m). **(S, 0.75d)**
+- `[ ]` **3.7.6 [NEW]** Multi-sector campaign transition wiring in `Application` / `GameScene` — `WinConditionSystem` fires `WinConditionMet` → `Application` loads next sector JSON → new `GameSession` started. Include Sector title card flash (full-screen inversion, one-line title per GDD §7). **(S, 0.5d)**
+
+### 3.8 Replay CI Scale — 5 → 30
+
+- `[ ]` **3.8.1 [MODIFY]** `tools/replay-runner/index.ts` — Promote to standalone parallel worker pool (Node `worker_threads` or `piscina`). Remove Jest dependency. Target: 30-replay suite completes in < 2 min. **(S, 0.5d)**
+- `[ ]` **3.8.2 [NEW]** `tests/replays/golden_06.json` … `golden_30.json` — 25 new golden replays covering: each campaign Sector (0–5), Abyss run, multi-Anchor save, max-speed ball, Fall Floor catch, PlayabilityCheck export round-trip, sector transition. Generated via `tools/generate-golden.ts`. **(M, 1.0d)**
+- `[ ]` **3.8.3 [MODIFY]** `.github/workflows/ci.yml` — Add `replay-regression` job running `tools/replay-runner` in parallel on every PR. Block merge on any hash mismatch. **(S, 0.25d)**
+
+### 3.9 New Perf Tests
+
+- `[ ]` **3.9.1 [NEW]** `tests/perf/chunk-unload.test.ts` — Load Sector 5 + Abyss, trigger sector transition, assert body count drops to baseline (≤ 50). **(S, 0.25d)**
+- `[ ]` **3.9.2 [NEW]** `tests/perf/level-load.test.ts` — Load + `migrateToLatest()` on largest campaign sector JSON; assert elapsed < 250 ms. **(S, 0.25d)**
+- `[ ]` **3.9.3 [NEW]** `tests/perf/memory.test.ts` — Automated heap snapshot test across full campaign run; assert RSS < 512 MB. **(S, 0.5d)**
+
+### 3.10 Creator Integration Test
+
+- `[ ]` **3.10.1 [NEW]** `tests/creator/playability-export.test.ts` — End-to-end integration test (no Phaser, no Electron): construct a minimal `LevelData`, run `PlayabilityCheck`, assert `verified: true`, serialize to JSON, `deserializeLevel()`, assert `level_hash` intact. Runs on every PR via Jest. **(S, 0.5d)**
+
+---
 
 ### M3 Exit Criteria
-- [ ] Creator MVP features complete per definition above.
-- [ ] Export → local save → reload → campaign play round-trip works.
-- [ ] Playability Check stamps `verifier: "local"`; UI does not show Clear Badge.
-- [ ] 30-replay CI green; campaign Sectors 0–5 + Abyss playable.
-- [ ] Perf: memory test passes; chunk unload test passes; level load < 250 ms; manual Sector 5 frame profile ≤ 16.7 ms.
+
+- [ ] **Serialization:** `migrateToLatest()` handles v1→v3 and v2→v3. `sector_00.json`, `sector_03.json` updated to Format v3. Migration tests pass.
+- [ ] **Electron IPC:** `saveFileDialog` / `loadFileDialog` wired in main + preload. `ElectronStorageProvider` integrated via factory.
+- [ ] **SettingsSystem & SaveSystem:** Extracted from stubs; persistent via `StorageProvider`.
+- [ ] **Creator Studio MVP:** `CreatorScene` with `CreatorGrid`, `BlockPalette`, `CreatorHUD`, `CreatorTestPlay` operational. Block placement, Test Play, save/load, export all functional per MVP scope above.
+- [ ] **Playability Check:** Export stamps `verifier: "local"`. UI never displays Clear Badge for `"local"`. `VERIFIER_BADGE_RULE` comment anchor present.
+- [ ] **Campaign:** Sectors 0–5 all playable (sector_01–05 authored; sector_03 promoted from stub). Sector transition title card works. Abyss runs procedurally after Sector 5.
+- [ ] **30-replay CI green** on every PR (parallel runner). All 30 replays cover the scenario types listed in 3.8.2.
+- [ ] **Perf:** `chunk-unload`, `level-load`, `memory` tests pass. Manual Sector 5 frame profile ≤ 16.7 ms. Level JSON load < 250 ms. Creator integration test green.
+
+---
+
+### M3 Open Questions
+
+> [!WARNING]
+> **Sector height inconsistency:** `sector_03.json` uses `height: 300.0` while other sectors target ~500 m. Decide: extend Sector 3 to 500 m during promotion (3.7.3), or keep it shorter as a pacing beat. Lock this before authoring begins.
+
+> [!IMPORTANT]
+> **Format v3 blocks vs. legacy flat arrays:** The current campaign JSONs (`sector_00.json`, `sector_03.json`) use flat `flippers[]`, `bumpers[]`, `walls[]` arrays — not a unified `blocks[]` array as specified in TDD §8.2. The migration plan (3.1.3) must bridge this. Confirm: does `SectorLoader` adopt Format v3 blocks natively, or does migration always produce the legacy `SectorData` shape as an intermediate? Decide before 3.1.1.
+
+> [!NOTE]
+> **`AbyssGenerator` stub:** The plan references this in M2.5 and again in 3.2.2, but `src/simulation/systems/` currently contains only `CheckpointSystem`, `NudgeSystem`, `WinConditionSystem` — **`AbyssGenerator.ts` does not exist yet.** It must be created in M3.2.2 (not promoted from M2 as the old plan implied).
+
+> [!NOTE]
+> **`SettingsSystem` / `SaveSystem` location:** TDD §3.1 shows these as `src/core/SettingsSystem.ts` and `src/save/SaveSystem.ts`, but the M3 plan previously listed them both under `src/core/`. The plan above follows the TDD layout. Confirm.
+
+> [!NOTE]
+> **Content authoring sequence:** Sectors 1–5 can only be authored after Creator Studio core is working (3.5 complete). The +3 d content buffer should be treated as a separate phase that starts after Creator Studio is signed off internally.
 
 ---
 

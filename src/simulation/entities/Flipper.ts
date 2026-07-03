@@ -5,11 +5,17 @@ export class Flipper {
   public body: RAPIER.RigidBody;
   public joint: RAPIER.RevoluteImpulseJoint;
   public side: 'left' | 'right';
-  public length = 2.4;
+  public length = 1.6;
   public thickness = 0.25;
+  
+  public minAngle: number;
+  public maxAngle: number;
 
-  private targetSpeed = 30.0; // rad/s
-  private maxTorque = 3000.0;
+  private stiffness = 2000.0;
+  private damping = 50.0;
+  
+  private targetSpeed = 45.0; // rad/s stroke velocity
+  private velocityDamping = 300.0; // high gain for arcade-like snappy solenoid flips
 
   constructor(
     physicsWorld: PhysicsWorld,
@@ -20,6 +26,8 @@ export class Flipper {
     maxAngle = 0.45
   ) {
     this.side = side;
+    this.minAngle = minAngle;
+    this.maxAngle = maxAngle;
 
     // 1. Create fixed anchor body at pivot position
     const pivotDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(x, y);
@@ -41,29 +49,31 @@ export class Flipper {
 
     // 3. Connect via RevoluteJoint
     const jointDesc = RAPIER.JointData.revolute({ x: 0, y: 0 }, { x: 0, y: 0 });
-    jointDesc.limitsEnabled = true;
-    jointDesc.limits = [minAngle, maxAngle];
-
     this.joint = physicsWorld.createImpulseJoint(jointDesc, pivotBody, this.body, true) as RAPIER.RevoluteImpulseJoint;
+    
+    // Explicitly configure joint limits and motor models on the dynamic joint
+    this.joint.setLimits(minAngle, maxAngle);
     this.joint.configureMotorModel(RAPIER.MotorModel.ForceBased);
     
-    // Set initial resting motor velocity (drive downwards)
-    const initialRestSpeed = side === 'left' ? -this.targetSpeed : this.targetSpeed;
-    this.joint.configureMotorVelocity(initialRestSpeed, this.maxTorque);
+    // Set initial position motor target to resting limit
+    this.joint.configureMotorPosition(initialAngle, this.stiffness, this.damping);
   }
 
   /**
    * Actuates the flipper based on input state.
-   * @param isPressed - True if the flipper button is held down.
+   * - Solenoid-power velocity control for active flips.
+   * - Stable position-lock for resting state.
    */
   setInput(isPressed: boolean): void {
-    if (this.side === 'left') {
-      const speed = isPressed ? this.targetSpeed : -this.targetSpeed;
-      this.joint.configureMotorVelocity(speed, this.maxTorque);
+    this.body.wakeUp();
+    if (isPressed) {
+      // Solenoid swing up: constant high torque and angular velocity
+      const speed = this.side === 'left' ? this.targetSpeed : -this.targetSpeed;
+      this.joint.configureMotorVelocity(speed, this.velocityDamping);
     } else {
-      // For the right flipper, positive rotation swings downwards, negative velocity swings upwards.
-      const speed = isPressed ? -this.targetSpeed : this.targetSpeed;
-      this.joint.configureMotorVelocity(speed, this.maxTorque);
+      // Rest/Holding position return
+      const target = this.side === 'left' ? this.minAngle : this.maxAngle;
+      this.joint.configureMotorPosition(target, this.stiffness, this.damping);
     }
   }
 

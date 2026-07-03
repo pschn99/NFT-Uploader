@@ -1,19 +1,37 @@
 import { StorageProvider } from './StorageProvider';
 import { BrowserStorageProvider } from './BrowserStorageProvider';
+import { ElectronStorageProvider } from './ElectronStorageProvider';
 
 export class StorageProviderFactory {
   /**
-   * Factory method to return the correct StorageProvider.
-   * If running in a headless/Node.js environment, returns a MemoryStorageProvider.
-   * If running in Electron/Browser, returns a BrowserStorageProvider.
+   * Returns the correct StorageProvider for the current runtime environment:
+   *
+   * - **Electron** (`window.electronAPI.isElectron === true`):
+   *   `ElectronStorageProvider` — uses localStorage + native file dialogs.
+   * - **Browser** (window + localStorage available, but no Electron):
+   *   `BrowserStorageProvider` — uses localStorage only.
+   * - **Headless / Node.js** (no window, e.g. Jest / replay-runner):
+   *   `MemoryStorageProvider` — in-memory only, no persistence.
    */
   static create(): StorageProvider {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      // Headless / Node.js (tests, replay-runner)
       return new MemoryStorageProvider();
     }
+
+    if ((window as { electronAPI?: { isElectron?: boolean } }).electronAPI?.isElectron) {
+      // Running inside the Electron shell
+      return new ElectronStorageProvider();
+    }
+
+    // Browser / dev server without Electron
     return new BrowserStorageProvider();
   }
 }
+
+// ---------------------------------------------------------------------------
+// MemoryStorageProvider — headless fallback (Node.js / Jest)
+// ---------------------------------------------------------------------------
 
 class MemoryStorageProvider implements StorageProvider {
   private storage: Record<string, string> = {};
@@ -28,3 +46,4 @@ class MemoryStorageProvider implements StorageProvider {
     return JSON.parse(val) as T;
   }
 }
+

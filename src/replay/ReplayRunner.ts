@@ -1,6 +1,6 @@
 import RAPIER from '@dimforge/rapier2d-compat';
 import { GameSession } from '../simulation/session/GameSession';
-import { SectorLoader, SectorData } from '../tower/SectorLoader';
+import { SectorLoader } from '../tower/SectorLoader';
 import { InputBuffer } from '../core/InputBuffer';
 import { ReplayHash } from './ReplayHash';
 import { ReplayData } from './ReplaySystem';
@@ -25,7 +25,7 @@ export class ReplayRunner {
     const session = new GameSession(replay.seed);
 
     // 3. Load same sector_00 level layout and get chunkManager
-    const chunkManager = SectorLoader.load(session.simulation, sector00 as SectorData);
+    const chunkManager = SectorLoader.load(session.simulation, sector00);
 
     // 4. Setup InputBuffer with replay inputs
     const inputBuffer = new InputBuffer();

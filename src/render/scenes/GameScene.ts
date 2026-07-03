@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GameSession } from '../../simulation/session/GameSession';
-import { SectorLoader, SectorData } from '../../tower/SectorLoader';
+import { SectorLoader } from '../../tower/SectorLoader';
 import { InputBuffer } from '../../core/InputBuffer';
 import { InputBridge } from '../InputBridge';
 import { PhaserRenderer } from '../PhaserRenderer';
@@ -44,7 +44,7 @@ export class GameScene extends Phaser.Scene {
     this.session = new GameSession();
 
     // 3. Load level layout and initialize chunk manager
-    this.chunkManager = SectorLoader.load(this.session.simulation, sector00 as SectorData);
+    this.chunkManager = SectorLoader.load(this.session.simulation, sector00);
 
     // 4. Create core bridges
     this.inputBuffer = new InputBuffer();

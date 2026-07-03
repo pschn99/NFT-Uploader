@@ -5,13 +5,18 @@ export class PhysicsWorld {
 
   constructor(gravity: { x: number; y: number }) {
     this.rawWorld = new RAPIER.World(gravity);
+    // Set timestep to 240Hz (1/240s) for high-accuracy substepping
+    this.rawWorld.timestep = 1 / 240;
   }
 
   /**
-   * Steps the physics simulation by a fixed timestep of 1/60 seconds.
+   * Steps the physics simulation by 4 sub-steps of 1/240 seconds
+   * to achieve a high-fidelity 240Hz physics tick rate per frame.
    */
   step(): void {
-    this.rawWorld.step();
+    for (let i = 0; i < 4; i++) {
+      this.rawWorld.step();
+    }
   }
 
   /**

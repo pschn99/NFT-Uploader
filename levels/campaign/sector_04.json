@@ -1,0 +1,70 @@
+{
+  "format_version": 3,
+  "name": "The Negative Space",
+  "author_id": "campaign",
+  "sector_height_m": 500.0,
+  "blocks": [
+    { "type": "plunger",       "grid_x": 30, "grid_y": 2 },
+
+    { "type": "flipper_left",  "grid_x": 11, "grid_y": 6 },
+    { "type": "flipper_right", "grid_x": 18, "grid_y": 6 },
+
+    { "type": "flipper_left",  "grid_x": 11, "grid_y": 162 },
+    { "type": "flipper_right", "grid_x": 18, "grid_y": 162 },
+
+    { "type": "flipper_left",  "grid_x": 11, "grid_y": 319 },
+    { "type": "flipper_right", "grid_x": 18, "grid_y": 319 },
+
+    { "type": "flipper_left",  "grid_x": 11, "grid_y": 475 },
+    { "type": "flipper_right", "grid_x": 18, "grid_y": 475 },
+
+    { "type": "flipper_left",  "grid_x": 11, "grid_y": 631 },
+    { "type": "flipper_right", "grid_x": 18, "grid_y": 631 },
+
+    { "type": "bumper_standard", "grid_x": 9,  "grid_y": 60,  "params": { "radius": 0.4 } },
+    { "type": "bumper_standard", "grid_x": 23, "grid_y": 75,  "params": { "radius": 0.4 } },
+
+    { "type": "bumper_standard", "grid_x": 16, "grid_y": 215, "params": { "radius": 0.4 } },
+    { "type": "bumper_standard", "grid_x": 8,  "grid_y": 245, "params": { "radius": 0.4 } },
+
+    { "type": "bumper_standard", "grid_x": 22, "grid_y": 370, "params": { "radius": 0.4 } },
+    { "type": "bumper_standard", "grid_x": 10, "grid_y": 400, "params": { "radius": 0.4 } },
+
+    { "type": "bumper_standard", "grid_x": 14, "grid_y": 525, "params": { "radius": 0.4 } },
+    { "type": "bumper_standard", "grid_x": 24, "grid_y": 545, "params": { "radius": 0.4 } },
+
+    { "type": "bumper_standard", "grid_x": 7,  "grid_y": 675, "params": { "radius": 0.4 } },
+    { "type": "bumper_standard", "grid_x": 19, "grid_y": 690, "params": { "radius": 0.4 } },
+
+    { "type": "wall", "grid_x": 16, "grid_y": 1,   "params": { "hx": 10.24, "hy": 0.5 } },
+    { "type": "wall", "grid_x": 0,  "grid_y": 391, "params": { "hx": 0.25, "hy": 250.0 } },
+    { "type": "wall", "grid_x": 32, "grid_y": 391, "params": { "hx": 0.25, "hy": 250.0 } },
+    { "type": "wall", "grid_x": 29, "grid_y": 9,   "params": { "hx": 0.1, "hy": 6.0 } },
+
+    { "type": "wall", "grid_x": 6,  "grid_y": 9,   "params": { "hx": 3.56, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 23, "grid_y": 9,   "params": { "hx": 3.56, "hy": 0.2, "rotation": 0.45 } },
+    { "type": "wall", "grid_x": 6,  "grid_y": 165, "params": { "hx": 3.56, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 23, "grid_y": 165, "params": { "hx": 3.56, "hy": 0.2, "rotation": 0.45 } },
+    { "type": "wall", "grid_x": 6,  "grid_y": 321, "params": { "hx": 3.56, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 23, "grid_y": 321, "params": { "hx": 3.56, "hy": 0.2, "rotation": 0.45 } },
+    { "type": "wall", "grid_x": 6,  "grid_y": 477, "params": { "hx": 3.56, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 23, "grid_y": 477, "params": { "hx": 3.56, "hy": 0.2, "rotation": 0.45 } },
+    { "type": "wall", "grid_x": 6,  "grid_y": 633, "params": { "hx": 3.56, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 23, "grid_y": 633, "params": { "hx": 3.56, "hy": 0.2, "rotation": 0.45 } },
+
+    { "type": "wall", "grid_x": 16, "grid_y": 110, "params": { "hx": 2.0, "hy": 0.15, "rotation": 0.3 } },
+    { "type": "wall", "grid_x": 10, "grid_y": 140, "params": { "hx": 1.5, "hy": 0.15, "rotation": -0.2 } },
+    { "type": "wall", "grid_x": 20, "grid_y": 270, "params": { "hx": 1.5, "hy": 0.15, "rotation": 0.25 } },
+    { "type": "wall", "grid_x": 8,  "grid_y": 300, "params": { "hx": 2.0, "hy": 0.15, "rotation": -0.3 } },
+    { "type": "wall", "grid_x": 18, "grid_y": 425, "params": { "hx": 1.8, "hy": 0.15, "rotation": 0.2 } },
+    { "type": "wall", "grid_x": 9,  "grid_y": 455, "params": { "hx": 1.5, "hy": 0.15, "rotation": -0.25 } },
+    { "type": "wall", "grid_x": 14, "grid_y": 580, "params": { "hx": 2.0, "hy": 0.15, "rotation": 0.3 } },
+    { "type": "wall", "grid_x": 22, "grid_y": 610, "params": { "hx": 1.5, "hy": 0.15, "rotation": -0.2 } },
+
+    { "type": "checkpoint", "grid_x": 16, "grid_y": 156 },
+    { "type": "checkpoint", "grid_x": 16, "grid_y": 313 },
+    { "type": "checkpoint", "grid_x": 16, "grid_y": 469 },
+    { "type": "checkpoint", "grid_x": 16, "grid_y": 625 },
+    { "type": "exit",       "grid_x": 16, "grid_y": 781 }
+  ]
+}

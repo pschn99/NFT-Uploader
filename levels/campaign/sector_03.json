@@ -1,50 +1,37 @@
 {
-  "width": 20.48,
-  "height": 300.0,
-  "ball": {
-    "x": 19.0,
-    "y": 2.0
-  },
-  "plunger": {
-    "x": 19.0,
-    "y": 1.2
-  },
-  "flippers": [
-    { "side": "left", "x": 6.8, "y": 3.8 },
-    { "side": "right", "x": 11.2, "y": 3.8 },
-
-    { "side": "left", "x": 5.8, "y": 103.8 },
-    { "side": "right", "x": 10.2, "y": 103.8 },
-
-    { "side": "left", "x": 7.8, "y": 203.8 },
-    { "side": "right", "x": 12.2, "y": 203.8 }
-  ],
-  "bumpers": [
-    { "x": 4.0, "y": 30.0, "radius": 0.8 },
-    { "x": 12.0, "y": 45.0, "radius": 0.6 },
-    { "x": 16.0, "y": 30.0, "radius": 0.8 },
-
-    { "x": 10.24, "y": 120.0, "radius": 1.0 },
-    { "x": 7.0, "y": 140.0, "radius": 0.6 },
-    { "x": 13.0, "y": 140.0, "radius": 0.6 },
-
-    { "x": 5.0, "y": 230.0, "radius": 0.6 },
-    { "x": 10.0, "y": 240.0, "radius": 0.8 },
-    { "x": 15.0, "y": 230.0, "radius": 0.6 }
-  ],
-  "walls": [
-    { "x": 10.24, "y": 0.5, "hx": 10.24, "hy": 0.5 },
-    { "x": 0.25, "y": 150.0, "hx": 0.25, "hy": 150.0 },
-    { "x": 20.23, "y": 150.0, "hx": 0.25, "hy": 150.0 },
-    { "x": 17.5, "y": 6.0, "hx": 0.1, "hy": 6.0 },
-
-    { "x": 3.2, "y": 5.0, "hx": 3.2, "hy": 0.2, "rotation": 0.45 },
-    { "x": 14.8, "y": 5.0, "hx": 3.2, "hy": 0.2, "rotation": -0.45 },
-
-    { "x": 2.7, "y": 105.0, "hx": 2.7, "hy": 0.2, "rotation": 0.4 },
-    { "x": 13.8, "y": 105.0, "hx": 3.2, "hy": 0.2, "rotation": -0.4 },
-
-    { "x": 3.7, "y": 205.0, "hx": 3.7, "hy": 0.2, "rotation": 0.5 },
-    { "x": 15.8, "y": 205.0, "hx": 2.7, "hy": 0.2, "rotation": -0.5 }
+  "format_version": 3,
+  "name": "The Plunger Vault",
+  "author_id": "campaign",
+  "sector_height_m": 300.0,
+  "blocks": [
+    { "type": "plunger",       "grid_x": 30, "grid_y": 2 },
+    { "type": "flipper_left",  "grid_x": 11, "grid_y": 6 },
+    { "type": "flipper_right", "grid_x": 18, "grid_y": 6 },
+    { "type": "flipper_left",  "grid_x": 9,  "grid_y": 162 },
+    { "type": "flipper_right", "grid_x": 16, "grid_y": 162 },
+    { "type": "flipper_left",  "grid_x": 12, "grid_y": 319 },
+    { "type": "flipper_right", "grid_x": 19, "grid_y": 319 },
+    { "type": "bumper_standard", "grid_x": 6,  "grid_y": 47,  "params": { "radius": 0.8 } },
+    { "type": "bumper_standard", "grid_x": 19, "grid_y": 70,  "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 25, "grid_y": 47,  "params": { "radius": 0.8 } },
+    { "type": "bumper_standard", "grid_x": 16, "grid_y": 188, "params": { "radius": 1.0 } },
+    { "type": "bumper_standard", "grid_x": 11, "grid_y": 219, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 20, "grid_y": 219, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 8,  "grid_y": 359, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 16, "grid_y": 375, "params": { "radius": 0.8 } },
+    { "type": "bumper_standard", "grid_x": 23, "grid_y": 359, "params": { "radius": 0.6 } },
+    { "type": "wall", "grid_x": 16, "grid_y": 1,  "params": { "hx": 10.24, "hy": 0.5 } },
+    { "type": "wall", "grid_x": 0,  "grid_y": 234, "params": { "hx": 0.25, "hy": 150.0 } },
+    { "type": "wall", "grid_x": 32, "grid_y": 234, "params": { "hx": 0.25, "hy": 150.0 } },
+    { "type": "wall", "grid_x": 29, "grid_y": 9,  "params": { "hx": 0.1, "hy": 6.0 } },
+    { "type": "wall", "grid_x": 6,  "grid_y": 9,  "params": { "hx": 3.56, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 23, "grid_y": 9,  "params": { "hx": 3.56, "hy": 0.2, "rotation": 0.45 } },
+    { "type": "wall", "grid_x": 5,  "grid_y": 165, "params": { "hx": 3.06, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 22, "grid_y": 165, "params": { "hx": 4.01, "hy": 0.2, "rotation": 0.45 } },
+    { "type": "wall", "grid_x": 6,  "grid_y": 321, "params": { "hx": 4.06, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 24, "grid_y": 321, "params": { "hx": 3.01, "hy": 0.2, "rotation": 0.45 } },
+    { "type": "checkpoint", "grid_x": 16, "grid_y": 156 },
+    { "type": "checkpoint", "grid_x": 16, "grid_y": 313 },
+    { "type": "exit",       "grid_x": 16, "grid_y": 468 }
   ]
 }

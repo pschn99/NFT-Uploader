@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import RAPIER from '@dimforge/rapier2d-compat';
 import { Application } from './application';
-import { BrowserStorageProvider } from './core/BrowserStorageProvider';
 
 import { FlipperSpike } from './spikes/flipper-feel/FlipperSpike';
 import { FallFloorSpike } from './spikes/fall-floor/FallFloorSpike';
@@ -19,19 +18,14 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 async function startApp() {
-  console.log('Starting PINBALLZZZ application...');
-
-  // Ensure Rapier WASM compat is initialized globally before loading Phaser or creating Sessions
+  // 1. Initialise Rapier WASM before any physics bodies are created
   await RAPIER.init();
 
-  // Set up the default BrowserStorageProvider (Electron storage provider can be wired in later milestones)
-  const storage = new BrowserStorageProvider();
-  
-  // Create and boot application systems (save/settings stubs)
-  const appInstance = new Application(storage);
+  // 2. Boot the application (StorageProviderFactory auto-detects Electron vs Browser)
+  const appInstance = new Application();
   await appInstance.boot();
 
-  // Instantiate the Phaser Game instance
+  // 3. Launch Phaser
   new Phaser.Game(config);
 }
 

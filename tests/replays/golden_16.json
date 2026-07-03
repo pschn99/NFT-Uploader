@@ -1,0 +1,172 @@
+{
+  "seed": 12345,
+  "durationFrames": 1800,
+  "inputs": [
+    {
+      "frame": 5,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 6,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 7,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 8,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 9,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 10,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 11,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 12,
+      "action": "plunger",
+      "phase": "down"
+    },
+    {
+      "frame": 13,
+      "action": "plunger",
+      "phase": "up"
+    },
+    {
+      "frame": 72,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 87,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 146,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 161,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 220,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 235,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 294,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 309,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 368,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 383,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 442,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 457,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 516,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 531,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 590,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 605,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 664,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 679,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 738,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 753,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 812,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 827,
+      "action": "flipper_left",
+      "phase": "up"
+    },
+    {
+      "frame": 886,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 901,
+      "action": "flipper_left",
+      "phase": "up"
+    }
+  ],
+  "expectedHash": "94b0ea5e"
+}
