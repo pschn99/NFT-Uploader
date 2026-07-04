@@ -53,7 +53,7 @@ export class PlayabilityCheck {
     // Rapier must be initialized before creating a world
     await RAPIER.init();
 
-    const replayData = replaySystem.exportReplay(/* seed from session */ 12345);
+    const replayData = await replaySystem.exportReplay();
     if (!replayData) {
       return { verified: false };
     }
@@ -70,11 +70,13 @@ export class PlayabilityCheck {
 
     let winReached = false;
     let winPosition: { x: number; y: number } | null = null;
+    let clearTimeMs = 0;
 
     // Subscribe to win event before running
     session.simulation.eventBus.on('WinConditionMet', (data) => {
       winReached = true;
       winPosition = data.finalPosition;
+      clearTimeMs = data.clearTimeMs;
     });
 
     for (let frame = 0; frame < replayData.durationFrames; frame++) {
@@ -107,6 +109,7 @@ export class PlayabilityCheck {
       level_hash: levelHash,
       replay_hash: replayHash,
       replay_engine_version: engineVersion,
+      clear_time_s: parseFloat((clearTimeMs / 1000).toFixed(3)),
     };
 
     return { verified: true, stamp };

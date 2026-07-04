@@ -31,16 +31,23 @@ async function runCheck() {
     throw new Error('Verification failed: rigid body did not fall under gravity.');
   }
 
-  // 2. Headlessly re-simulate the golden replay to verify no regression
-  const goldenPath = path.resolve(__dirname, '../tests/replays/golden_01.json');
-  if (fs.existsSync(goldenPath)) {
-    console.log(`Verifying golden replay regression from: ${goldenPath}`);
-    const data = JSON.parse(fs.readFileSync(goldenPath, 'utf8'));
-    const result = await ReplayRunner.run(data);
-    if (!result.success) {
-      throw new Error(`Regression detected! Golden replay actual hash (${result.actualHash}) did not match expected (${result.expectedHash})`);
+  // 2. Headlessly re-simulate all golden replays to verify no regression (Priority 7)
+  const replaysDir = path.resolve(__dirname, '../tests/replays');
+  if (fs.existsSync(replaysDir)) {
+    const files = fs.readdirSync(replaysDir)
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => path.join(replaysDir, f))
+      .sort();
+
+    console.log(`Verifying all ${files.length} golden replays for regression...`);
+    for (const file of files) {
+      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const result = await ReplayRunner.run(data);
+      if (!result.success) {
+        throw new Error(`Regression detected on ${path.basename(file)}! Actual hash (${result.actualHash}) did not match expected (${result.expectedHash})`);
+      }
+      console.log(`✅ Golden replay ${path.basename(file)} verification: PASS`);
     }
-    console.log('✅ Golden replay regression verification: PASS');
   } else {
     console.log('Warning: No golden replays found in tests/replays/ yet.');
   }

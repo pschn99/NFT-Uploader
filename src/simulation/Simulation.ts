@@ -15,7 +15,6 @@ import { FallFloor } from './entities/FallFloor';
 import { NudgeSystem } from './systems/NudgeSystem';
 import { CheckpointSystem } from './systems/CheckpointSystem';
 import { WinConditionSystem } from './systems/WinConditionSystem';
-import { DRAIN_Y_THRESHOLD } from './constants';
 
 export class Simulation {
   public physicsWorld: PhysicsWorld;
@@ -33,9 +32,15 @@ export class Simulation {
   public bumpers: Bumper[] = [];
   public fallFloors: FallFloor[] = [];
   public isWon = false;
+  public isPaused = false;
   public elapsedTimeMs = 0;
 
+  // Milestone 3 UGC & Sensor definitions
+  public exitSensors: { x: number; y: number; radius: number }[] = [];
+  public checkpointSensors: { x: number; y: number; radius: number }[] = [];
+
   public frameIndex = 0;
+  public readonly seed: number;
   private rng: () => number;
 
   constructor(
@@ -47,13 +52,14 @@ export class Simulation {
     this.eventBus = eventBus;
     this.playerState = playerState;
     this.worldState = worldState;
+    this.seed = seed;
     this.rng = this.createMulberry32(seed);
 
     // Gravity scaled for snappy pinball feel (4x gravity Y scaling)
     this.physicsWorld = new PhysicsWorld({ x: 0, y: -9.81 * 4.0 });
 
     // Instantiate anchor manager
-    this.anchor = new Anchor(this.physicsWorld);
+    this.anchor = new Anchor(this.physicsWorld, this.eventBus);
   }
 
   /**
@@ -124,6 +130,39 @@ export class Simulation {
   }
 
   /**
+   * Removes a bumper from the simulation and destroys its physical body.
+   */
+  removeBumper(bumper: Bumper): void {
+    this.physicsWorld.removeRigidBody(bumper.body);
+    this.bumpers = this.bumpers.filter((b) => b !== bumper);
+  }
+
+  /**
+   * Removes a flipper from the simulation and destroys its physical body.
+   */
+  removeFlipper(flipper: Flipper): void {
+    this.physicsWorld.removeRigidBody(flipper.body);
+    if (flipper.pivotBody) {
+      this.physicsWorld.removeRigidBody(flipper.pivotBody);
+    }
+    this.flippers = this.flippers.filter((f) => f !== flipper);
+  }
+
+  /**
+   * Registers a 2D circular exit sensor collider location.
+   */
+  addExitSensor(x: number, y: number, radius = 2.0): void {
+    this.exitSensors.push({ x, y, radius });
+  }
+
+  /**
+   * Registers a 2D circular checkpoint sensor collider location.
+   */
+  addCheckpointSensor(x: number, y: number, radius = 1.5): void {
+    this.checkpointSensors.push({ x, y, radius });
+  }
+
+  /**
    * Spawns a solid boundary wall.
    */
   createStaticWall(x: number, y: number, hx: number, hy: number, rotation = 0): RAPIER.RigidBody {
@@ -157,14 +196,10 @@ export class Simulation {
       if (input.action === 'anchor') {
         if (input.phase === 'down') {
           if (this.anchor.isAttached()) {
-            this.anchor.detach();
+            this.anchor.release();
           } else if (this.playerState.anchorCharges > 0) {
             this.playerState.anchorCharges--;
-            this.anchor.attach(this.ball);
-            this.eventBus.emit('AnchorTriggered', {
-              anchorId: `a_${this.frameIndex}`,
-              chargesRemaining: this.playerState.anchorCharges
-            });
+            this.anchor.deploy(this.ball, this.frameIndex);
           }
         }
       }
@@ -172,14 +207,14 @@ export class Simulation {
       // Nudge Actions (break anchor suspension automatically)
       if (input.action === 'nudge_left' && input.phase === 'down') {
         if (this.anchor.isAttached()) {
-          this.anchor.detach();
+          this.anchor.release();
         }
         NudgeSystem.nudge(this.ball, this.playerState, this.eventBus, 'left');
       }
 
       if (input.action === 'nudge_right' && input.phase === 'down') {
         if (this.anchor.isAttached()) {
-          this.anchor.detach();
+          this.anchor.release();
         }
         NudgeSystem.nudge(this.ball, this.playerState, this.eventBus, 'right');
       }
@@ -193,7 +228,7 @@ export class Simulation {
           const angVel = leftFlippers.length > 0 ? leftFlippers[0].body.angvel() : 30.0;
           this.eventBus.emit('FlipperStruck', { side: 'left', angularVelocity: angVel });
           if (this.anchor.isAttached()) {
-            this.anchor.detach();
+            this.anchor.release();
           }
         }
       }
@@ -206,7 +241,7 @@ export class Simulation {
           const angVel = rightFlippers.length > 0 ? rightFlippers[0].body.angvel() : -30.0;
           this.eventBus.emit('FlipperStruck', { side: 'right', angularVelocity: angVel });
           if (this.anchor.isAttached()) {
-            this.anchor.detach();
+            this.anchor.release();
           }
         }
       }
@@ -220,7 +255,7 @@ export class Simulation {
             if (force > 0) {
               this.eventBus.emit('PlungerFired', { force });
               if (this.anchor.isAttached()) {
-                this.anchor.detach();
+                this.anchor.release();
               }
             }
           }
@@ -230,8 +265,12 @@ export class Simulation {
 
     // 2. Step the Rapier physics world
     this.physicsWorld.step();
+    if (this.ball) {
+      this.anchor.step(this.ball); // Update wall anchors hold & catch triggers
+    }
     this.frameIndex++;
-    // Fixed 1/60s timestep per TDD §9 — exactly 1000/60 ms per step
+    // Fixed 1/60s display timestep per TDD §9 — exactly 1000/60 ms per step.
+    // Rapier internally runs 4 substeps of 1/240s (see PhysicsWorld.step).
     this.elapsedTimeMs += 1000 / 60;
 
     // 3. Resolve active bumper colliders collision bounce impulses
@@ -267,17 +306,22 @@ export class Simulation {
         this.fallFloors.push(newFloor);
       }
 
-      // Check exit win condition height clearance
-      const won = WinConditionSystem.check(this.ball, this.eventBus, this.elapsedTimeMs);
+      // Check exit win condition overlap sensors (Priority 10)
+      const won = WinConditionSystem.check(this.ball, this.exitSensors, this.eventBus, this.elapsedTimeMs);
       if (won) {
         this.isWon = true;
       }
 
       // Drain check: reset to last checkpoint if ball falls below vertical bounds (TDD §7.2)
-      if (pos.y < DRAIN_Y_THRESHOLD) {
+      // Use adaptive threshold based on max height reached, falling back to absolute -1.5m floor.
+      // WorldState chunk bounds are updated here for external consumers (e.g. debug overlays).
+      this.worldState.minLoadedY = Math.min(this.worldState.minLoadedY, pos.y - 250.0);
+      this.worldState.maxLoadedY = Math.max(this.worldState.maxLoadedY, pos.y + 250.0);
+      const drainThreshold = Math.max(-1.5, this.playerState.maxHeight - 120.0);
+      if (pos.y < drainThreshold) {
         const fallenY = pos.y;
         if (this.anchor.isAttached()) {
-          this.anchor.detach();
+          this.anchor.release();
         }
         // Reset ball at checkpoint Y + 2m (dropping down safely)
         this.ball.reset(10.24, this.playerState.lastCheckpointY + 2.0);
@@ -292,7 +336,9 @@ export class Simulation {
     this.flippers = [];
     this.bumpers = [];
     this.fallFloors = [];
-    this.anchor.detach();
+    this.exitSensors = [];
+    this.checkpointSensors = [];
+    this.anchor.destroy();
     this.plunger = null;
   }
 }

@@ -136,21 +136,21 @@ describe('Creator: Playability Export Pipeline', () => {
   });
 
   test('VERIFIER_BADGE_RULE: verifier field is always "local" for client-issued stamps', async () => {
-    // Construct a minimal level with an exit at Y=0 (immediate win)
-    const trivialLevel: LevelData = {
+    // Construct a minimal level where the ball spawns directly inside the exit sensor
+    // (plunger at grid 16,2 → ball spawns 0.8m above at y=0.48; exit sensor at same grid
+    //  with radius 2.0 covers the spawn point, guaranteeing immediate win).
+    const immediateWinLevel: LevelData = {
       format_version: 3,
       sector_height_m: 10,
       blocks: [
         { type: 'plunger',    grid_x: 16, grid_y: 2 },
-        { type: 'flipper_left',  grid_x: 11, grid_y: 6 },
-        { type: 'flipper_right', grid_x: 18, grid_y: 6 },
-        { type: 'exit',       grid_x: 16, grid_y: 2 }, // Immediate win
+        { type: 'exit',       grid_x: 16, grid_y: 2 },
       ],
     };
 
     // Build a short replay stub — the check will run headlessly
     const session = new GameSession();
-    const chunkManager = SectorLoader.load(session.simulation, trivialLevel);
+    const chunkManager = SectorLoader.load(session.simulation, immediateWinLevel);
     const replaySystem = new ReplaySystem(session);
 
     for (let frame = 0; frame < 10; frame++) {
@@ -161,16 +161,13 @@ describe('Creator: Playability Export Pipeline', () => {
     session.destroy();
 
     const check = new PlayabilityCheck();
-    // Even if not verified (trivial level won't pass real check), the contract
-    // is that if it were verified, verifier would be 'local'.
-    const result = await check.verify(trivialLevel, replaySystem);
+    const result = await check.verify(immediateWinLevel, replaySystem);
 
-    if (result.verified && result.stamp) {
-      expect(result.stamp.verifier).toBe('local');
-      // VERIFIER_BADGE_RULE: never 'server' for client-only check
-      expect(result.stamp.verifier).not.toBe('server');
-    }
-    // If not verified, that's fine — we just assert the API contract doesn't throw
-    expect(() => result).not.toThrow?.();
+    // The ball starts inside the exit sensor radius → win triggers on step 0
+    expect(result.verified).toBe(true);
+    expect(result.stamp).toBeDefined();
+    expect(result.stamp!.verifier).toBe('local');
+    // VERIFIER_BADGE_RULE: never 'server' for client-only check
+    expect(result.stamp!.verifier).not.toBe('server');
   });
 });

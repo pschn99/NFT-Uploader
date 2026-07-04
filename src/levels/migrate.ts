@@ -26,16 +26,13 @@ import type {
   LegacyBumperEntry,
 } from './LevelData';
 import { GRID_CELL_METRES } from '../simulation/constants';
+import { FLIPPER_SNAP_ANGLES_RAD } from './BlockRegistry';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const CURRENT_FORMAT_VERSION = 3;
-
-// Flipper snap angles (radians). Index into this array → rotation_index.
-// 0 = resting angle left/right, subsequent entries are preset angles.
-const FLIPPER_SNAP_ANGLES_RAD = [0, Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2, -Math.PI / 6];
 
 // ---------------------------------------------------------------------------
 // Helpers: metres ↔ grid
@@ -222,12 +219,26 @@ export function levelDataToSectorData(level: LevelData): SectorData {
 
     switch (block.type) {
       case 'wall':
+        let wx = x;
+        let whx = (block.params?.hx as number) ?? GRID_CELL_METRES / 2;
+        const wrotation = (block.params?.rotation as number) ?? undefined;
+
+        // Auto-adjust funnel slopes to be flush with outer walls and flipper pivots (prevent stuck ball)
+        if (Math.abs(whx - 3.56) < 0.05 && wrotation !== undefined && Math.abs(Math.abs(wrotation) - 0.45) < 0.05) {
+          whx = 3.96;
+          if (wx < 10.0) {
+            wx = 3.56; // Flush left slope
+          } else {
+            wx = 15.00; // Flush right slope (symmetric around 9.28m center)
+          }
+        }
+
         walls.push({
-          x,
+          x: wx,
           y,
-          hx: (block.params?.hx as number) ?? GRID_CELL_METRES / 2,
+          hx: whx,
           hy: (block.params?.hy as number) ?? GRID_CELL_METRES / 2,
-          rotation: (block.params?.rotation as number) ?? undefined,
+          rotation: wrotation,
         });
         break;
       case 'flipper_left':
@@ -242,7 +253,7 @@ export function levelDataToSectorData(level: LevelData): SectorData {
       case 'plunger':
         plunger = { x, y };
         // Ball spawns 0.8 m above plunger by convention
-        ball = { x, y: y - 0.8 };
+        ball = { x, y: y + 0.8 };
         break;
       case 'checkpoint':
       case 'exit':

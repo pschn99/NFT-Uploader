@@ -19,20 +19,22 @@ export class ReplayHash {
   }
 
   /**
-   * Hashes a sequence of points to ensure full path determinism.
+   * Hashes a sequence of points to ensure full path determinism using true SHA-256 (Priority 10).
    */
-  static calculateSequence(points: Array<{ x: number; y: number }>): string {
-    let hash = 2166136261;
+  static async calculateSequence(points: Array<{ x: number; y: number }>): Promise<string> {
+    const encoder = new TextEncoder();
+    let input = '';
     
     points.forEach((p) => {
       const ix = Math.round(p.x * this.HASH_PRECISION);
       const iy = Math.round(p.y * this.HASH_PRECISION);
-      
-      hash = Math.imul(hash ^ ix, 16777619);
-      hash = Math.imul(hash ^ iy, 16777619);
+      input += `${ix},${iy};`;
     });
     
-    return (hash >>> 0).toString(16);
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   /**

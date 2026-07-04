@@ -1,8 +1,8 @@
-# PINBALLZZZ — Implementation Plan (v1.10)
+# PINBALLZZZ — Implementation Plan (v1.11)
 
 Translates [GDD.md](file:///Users/ps/Dev/NFT-Uploader/GDD.md) v2.0 + [TDD.md](file:///Users/ps/Dev/NFT-Uploader/TDD.md) v0.6 into a phased, milestone-driven build plan.
 
-**Changes in v1.10:** Reconciled milestone estimate math to exactly 53 d for Local v1.0 (planning range ~50–55 d). Changed Sector 3 theme to plunger vaults using MVP-supported blocks. Moved BlockRegistry to src/levels/BlockRegistry.ts. Added level_hash to serialization format and PlayabilityCheck. Detailed the InputBuffer schema to support flippers, plunger, and analog inputs. Moved Steamworks audit to M5. Removed ASM.js Safari fallback from WASM init spike.
+**Changes in v1.11:** Added Milestone 3.5 (Audit Resolution) to resolve all 41 outstanding issues from the v2.0 audit report. Reconciled milestone estimate math to exactly 53 d for Local v1.0 (planning range ~50–55 d). Changed Sector 3 theme to plunger vaults using MVP-supported blocks. Moved BlockRegistry to src/levels/BlockRegistry.ts. Added level_hash to serialization format and PlayabilityCheck. Detailed the InputBuffer schema to support flippers, plunger, and analog inputs. Moved Steamworks audit to M5. Removed ASM.js Safari fallback from WASM init spike.
 
 ---
 
@@ -356,6 +356,52 @@ M0 (Scaffold + P0 Spikes)
 - [ ] **Campaign:** Sectors 0–5 all playable (sector_01–05 authored; sector_03 promoted from stub). Sector transition title card works. Abyss runs procedurally after Sector 5.
 - [ ] **30-replay CI green** on every PR (parallel runner). All 30 replays cover the scenario types listed in 3.8.2.
 - [ ] **Perf:** `chunk-unload`, `level-load`, `memory` tests pass. Manual Sector 5 frame profile ≤ 16.7 ms. Level JSON load < 250 ms. Creator integration test green.
+
+---
+
+## Milestone 3.5 — Audit Resolution (M3 Completion Gate)
+
+**Goal:** Resolve all 41 outstanding issues identified in the Milestone Audit Report (HEAD a9b4f77 / Revision 2.0).
+
+**Estimate:** ~7 d
+
+### 3.5.1 Immediate (M3 Completion Gate)
+- `[ ]` **[MODIFY]** `AbyssGenerator.ts` — Remove `Date.now()` seed from generator; accept seed parameter passed from constructor to ensure replay determinism **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `GameScene.ts` — Pass actual session seed (or a static seed like `12345` for local campaign replays) through to the replay exporter and simulation **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `HUD.ts` — Fix hardcoded "TOWER 0" text to display the actual campaign sector name from `CampaignManager` **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `CreatorTestPlay.ts` — Remove redundant session instantiation to prevent orphaning the `GameSession` **(S, 0.25d)**
+
+### 3.5.2 Before M4 Kickoff (Critical)
+- `[ ]` **[MODIFY]** `Anchor.ts` & `PlayerState.ts` — Re-implement Anchor system per GDD §6: pre-placed wall catch-points in LevelData, limit to 2 anchors per sector, max 3 catches per anchor, and 0.4s kinematic hold auto-release **(M, 2.0d)**
+- `[ ]` **[MODIFY]** `GameSession.ts` — Add `replay: ReplaySystem` member variable as required by TDD §3.1 architecture **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `Simulation.ts` & `GameScene.ts` — Implement Pause state and Pause overlay screen (`Esc` / `Start` bindings) **(S, 0.5d)**
+- `[ ]` **[MODIFY]** `.github/workflows/ci.yml` — Add `timeout-minutes: 10` to the `replay-regression` job to prevent hanging runner bills **(S, 0.1d)**
+- `[ ]` **[MODIFY]** `CreatorHUD.ts` — Remove `void` operator from async callbacks (`onSave`, `onLoad`, `onExport`) and handle rejects cleanly **(S, 0.2d)**
+- `[ ]` **[MODIFY]** `PlayabilityCheck.ts` & `ReplayHash.ts` — Align level hash verification to utilize true SHA-256 per TDD §9 **(S, 0.5d)**
+
+### 3.5.3 During M4 (Major)
+- `[ ]` **[MODIFY]** `Simulation.ts` — Determine drain boundary relative to chunk loaded bounds instead of arbitrary hardcoded `-1.5m` **(S, 0.5d)**
+- `[ ]` **[MODIFY]** `BrowserStorageProvider.ts` & `ElectronStorageProvider.ts` — Unify storage prefixes to `pinballzzz_` for cross-context data compatibility **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `tests/replays/` — Generate edge-case replays (multi-Anchor saves, FallFloor catches, Abyss runs, sector transitions) **(S, 0.5d)**
+- `[ ]` **[NEW]** `levels/sandbox/` — Create sandbox level templates directory per TDD §4 structure **(S, 0.1d)**
+- `[ ]` **[MODIFY]** `tests/perf/memory.test.ts` — Measure process `rss` instead of JS `heapUsed` to match spec performance limits **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `tests/perf/chunk-unload.test.ts` — Update test to use Sector 5 → Abyss transition verification and assert body count ≤ 50 **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `tools/rapier-bump-check.ts` — Loop and verify all golden replays instead of only `golden_01.json` **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `BlockRegistry.ts` & `migrate.ts` — Move `FLIPPER_SNAP_ANGLES_RAD` to BlockRegistry **(S, 0.2d)**
+
+### 3.5.4 Before M4 Ship (Minor)
+- `[ ]` **[MODIFY]** `PlayabilityCheck.ts` — Compute and populate the `clear_time_s` stamp field **(S, 0.2d)**
+- `[ ]` **[MODIFY]** `CreatorGrid.ts` — Draw coordinate readout text overlay under cursor **(S, 0.25d)**
+- `[ ]` **[MODIFY]** `Bumper.ts` — Address double impulse behavior (restitution 1.1 vs resolution hit impulse) **(S, 0.3d)**
+- `[ ]` **[MODIFY]** `Plunger.ts` — Clean up or wire the dead sensor collider **(S, 0.2d)**
+- `[ ]` **[MODIFY]** `tests/audio/` — Document async audio silent headless behavior **(S, 0.1d)**
+
+### M3.5 Exit Criteria
+- [ ] Replay deterministic checks pass under multi-threaded parallel workers.
+- [ ] No memory/body leaks in Abyss.
+- [ ] Gamepad controls fully active.
+- [ ] Anchor indicator successfully rendered on screen.
+- [ ] Exit sensors correctly clear UGC sectors.
 
 ---
 

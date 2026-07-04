@@ -53,6 +53,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    // Register cleanup to run when the scene is stopped/restarted
+    this.events.once('shutdown', this.destroy, this);
+
     // 1. Play fade-in transition
     SectorTransition.fadeIn(this);
 
@@ -90,17 +93,20 @@ export class GameScene extends Phaser.Scene {
 
   private setupSimulation(levelData: LevelData) {
     // 1. Create a fresh GameSession (physics + state managers)
-    this.session = new GameSession();
+    const seed = this.currentSectorIndex === -1 ? 12345 : (1000 + this.currentSectorIndex);
+    this.session = new GameSession(seed);
 
     // 2. Load level layout and initialize chunk manager
     this.chunkManager = SectorLoader.load(this.session.simulation, levelData);
 
     // 3. Create core bridges
+    const app = (this.game as any).appInstance;
+    const settingsSystem = app?.settingsSystem;
     this.inputBuffer = new InputBuffer();
-    this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation);
+    this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation, settingsSystem);
     this.visualRenderer = new PhaserRenderer(this, this.session.simulation);
     this.cameraController = new CameraController(this.cameras.main, this.session.simulation.ball);
-    this.replaySystem = new ReplaySystem(this.session);
+    this.replaySystem = this.session.replay;
 
     // 4. Instantiate HUD overlay
     this.hud = new HUD(this);
@@ -119,22 +125,27 @@ export class GameScene extends Phaser.Scene {
   }
 
   private setupAbyssSimulation() {
-    // 1. Create GameSession
-    this.session = new GameSession();
+    // 1. Generate a seed for this specific run (Priority 1)
+    const runSeed = Math.floor(Math.random() * 1000000) || 12345;
+
+    // Create GameSession with the run seed
+    this.session = new GameSession(runSeed);
 
     // Spawn ball at standard position
     this.session.simulation.setBall(9.125, 2.0);
 
-    // 2. Initialize Abyss generator starting at Y=0
-    this.abyssGenerator = new AbyssGenerator(this.session.simulation, Date.now(), 0);
+    // 2. Initialize Abyss generator starting at Y=0 with the same run seed
+    this.abyssGenerator = new AbyssGenerator(this.session.simulation, runSeed, 0);
     this.abyssGenerator.update(2.0);
 
     // 3. Create core bridges
+    const app = (this.game as any).appInstance;
+    const settingsSystem = app?.settingsSystem;
     this.inputBuffer = new InputBuffer();
-    this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation);
+    this.inputBridge = new InputBridge(this, this.inputBuffer, this.session.simulation, settingsSystem);
     this.visualRenderer = new PhaserRenderer(this, this.session.simulation);
     this.cameraController = new CameraController(this.cameras.main, this.session.simulation.ball);
-    this.replaySystem = new ReplaySystem(this.session);
+    this.replaySystem = this.session.replay;
 
     // 4. Instantiate HUD overlay
     this.hud = new HUD(this);
@@ -150,6 +161,105 @@ export class GameScene extends Phaser.Scene {
     SectorTransition.fadeIn(this);
 
     console.log('Abyss simulation loaded.');
+  }
+
+  private pauseOverlay: Phaser.GameObjects.Container | null = null;
+  private prevPadStartPressed = false;
+
+  private togglePause() {
+    if (!this.session) return;
+    const sim = this.session.simulation;
+    sim.isPaused = !sim.isPaused;
+
+    if (sim.isPaused) {
+      this.showPauseOverlay();
+    } else {
+      this.hidePauseOverlay();
+    }
+  }
+
+  private showPauseOverlay() {
+    if (this.pauseOverlay) {
+      this.pauseOverlay.setVisible(true);
+      return;
+    }
+
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    this.pauseOverlay = this.add.container(0, 0).setDepth(2000);
+
+    // 1. Semi-transparent backing
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0a0a0c, 0.85);
+    bg.fillRect(0, 0, width, height);
+    this.pauseOverlay.add(bg);
+
+    // 2. Neon cyan frame
+    const frame = this.add.graphics();
+    frame.lineStyle(2, 0x00ffff, 0.7);
+    frame.strokeRect(width / 2 - 200, height / 2 - 220, 400, 440);
+    this.pauseOverlay.add(frame);
+
+    // 3. Title text
+    const title = this.add.text(width / 2, height / 2 - 160, 'SYSTEM PAUSED', {
+      fontSize: '32px',
+      color: '#00ffff',
+      fontFamily: 'monospace',
+      fontStyle: 'bold',
+      align: 'center'
+    }).setOrigin(0.5);
+    this.pauseOverlay.add(title);
+
+    const subtitle = this.add.text(width / 2, height / 2 - 120, 'suspension active', {
+      fontSize: '14px',
+      color: '#888888',
+      fontFamily: 'monospace',
+      align: 'center'
+    }).setOrigin(0.5);
+    this.pauseOverlay.add(subtitle);
+
+    // 4. Menu buttons helper
+    const createBtn = (yOffset: number, label: string, onClick: () => void) => {
+      const btn = this.add.text(width / 2, height / 2 + yOffset, label, {
+        fontSize: '20px',
+        color: '#aaaaaa',
+        fontFamily: 'monospace',
+        padding: { x: 16, y: 8 }
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+      btn.on('pointerover', () => btn.setColor('#00ffff'));
+      btn.on('pointerout', () => btn.setColor('#aaaaaa'));
+      btn.on('pointerdown', onClick);
+
+      this.pauseOverlay?.add(btn);
+    };
+
+    createBtn(-30, '[ RESUME CLIMB ]', () => this.togglePause());
+    createBtn(30, '[ RESTART SECTOR ]', () => {
+      this.togglePause();
+      if (this.testPlayContext) {
+        this.scene.start('GameScene', { creatorTestPlay: this.testPlayContext });
+      } else {
+        this.scene.start('GameScene', { sectorIndex: this.currentSectorIndex });
+      }
+    });
+    createBtn(90, '[ ABORT MISSION ]', () => {
+      this.togglePause();
+      SectorTransition.fadeOut(this, 300, () => {
+        if (this.testPlayContext) {
+          this.testPlayContext.onEnd({ cleared: false });
+        } else {
+          this.scene.start('MenuScene');
+        }
+      });
+    });
+  }
+
+  private hidePauseOverlay() {
+    if (this.pauseOverlay) {
+      this.pauseOverlay.setVisible(false);
+    }
   }
 
   update() {
@@ -193,30 +303,46 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    // A. Handle Escape key to return to menu
+    // A. Handle Escape key / Gamepad Start to toggle pause (Priority 7)
     if (Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
-      SectorTransition.fadeOut(this, 300, () => {
-        if (this.testPlayContext) {
-          this.testPlayContext.onEnd({ cleared: false });
-        } else {
-          this.scene.start('MenuScene');
+      this.togglePause();
+      return;
+    }
+
+    if (this.input.gamepad) {
+      const pad = this.input.gamepad.pad1;
+      if (pad && pad.buttons[9] && pad.buttons[9].pressed) {
+        if (!this.prevPadStartPressed) {
+          this.togglePause();
         }
-      });
+        this.prevPadStartPressed = true;
+      } else {
+        this.prevPadStartPressed = false;
+      }
+    }
+
+    // If simulation is paused, skip updating physics or inputs (Priority 7)
+    if (this.session.simulation.isPaused) {
+      this.visualRenderer.update();
+      this.hud.update(this.session);
       return;
     }
 
     // B. Handle developer export/reset keys
     if (Phaser.Input.Keyboard.JustDown(this.exportKey)) {
-      const replay = this.replaySystem.exportReplay(12345);
-      console.log('=== EXPORTED REPLAY JSON ===');
-      console.log(JSON.stringify(replay, null, 2));
-      console.log('============================');
-      try {
-        localStorage.setItem('last_pinball_replay', JSON.stringify(replay));
-        alert('Replay exported to Console!');
-      } catch (e) {
-        console.error('Failed to write to localStorage', e);
-      }
+      this.replaySystem.exportReplay().then((replay) => {
+        console.log('=== EXPORTED REPLAY JSON ===');
+        console.log(JSON.stringify(replay, null, 2));
+        console.log('============================');
+        try {
+          localStorage.setItem('last_pinball_replay', JSON.stringify(replay));
+          alert('Replay exported to Console!');
+        } catch (e) {
+          console.error('Failed to write to localStorage', e);
+        }
+      }).catch((err) => {
+        console.error('Export replay error:', err);
+      });
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.resetKey)) {
@@ -268,12 +394,32 @@ export class GameScene extends Phaser.Scene {
   }
 
   destroy() {
-    if (this.inputBridge) this.inputBridge.destroy();
-    if (this.visualRenderer) this.visualRenderer.destroy();
-    if (this.hud) this.hud.destroy();
-    if (this.chunkManager) this.chunkManager.destroy();
-    if (this.abyssGenerator) this.abyssGenerator.destroy();
-    if (this.audioSystem) this.audioSystem.destroy();
-    if (this.session) this.session.destroy();
+    if (this.inputBridge) {
+      this.inputBridge.destroy();
+    }
+    if (this.visualRenderer) {
+      this.visualRenderer.destroy();
+    }
+    if (this.hud) {
+      this.hud.destroy();
+    }
+    if (this.chunkManager) {
+      this.chunkManager.destroy();
+      this.chunkManager = null;
+    }
+    if (this.abyssGenerator) {
+      this.abyssGenerator.destroy();
+      this.abyssGenerator = null;
+    }
+    if (this.audioSystem) {
+      this.audioSystem.destroy();
+    }
+    if (this.session) {
+      this.session.destroy();
+    }
+    if (this.pauseOverlay) {
+      this.pauseOverlay.destroy();
+      this.pauseOverlay = null;
+    }
   }
 }

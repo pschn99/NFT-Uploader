@@ -183,15 +183,40 @@ export class PhaserRenderer {
       const fullWidth = 1.0 * PIXELS_PER_METRE;
       this.plungerTensionGraphics.setSize(fullWidth * charge, 4);
     }
+
+    // 5. Draw wall Anchor targets if active (Priority 9)
+    const anchor = this.simulation.anchor;
+    if (anchor && anchor.activeAnchors) {
+      for (const act of anchor.activeAnchors) {
+        const ax = act.x * PIXELS_PER_METRE;
+        const ay = this.screenHeight - (act.y * PIXELS_PER_METRE);
+        const isHolding = anchor.heldBall && Math.hypot(this.simulation.ball.getPosition().x - act.x, this.simulation.ball.getPosition().y - act.y) <= 1.0;
+
+        this.dynamicGraphics.lineStyle(2, 0x00ffff, 0.8);
+        this.dynamicGraphics.fillStyle(0x00ffff, isHolding ? 0.5 : 0.15);
+        this.dynamicGraphics.strokeCircle(ax, ay, act.radius * PIXELS_PER_METRE);
+        this.dynamicGraphics.fillCircle(ax, ay, 6);
+      }
+    }
   }
 
   destroy(): void {
-    this.ballGraphics.destroy();
-    this.trailGraphics.destroy();
-    this.dynamicGraphics.destroy();
-    this.flipperGraphicsMap.forEach((rect) => rect.destroy());
-    this.bumperGraphics.forEach((circle) => circle.destroy());
-    if (this.plungerGraphics) this.plungerGraphics.destroy();
-    if (this.plungerTensionGraphics) this.plungerTensionGraphics.destroy();
+    try {
+      if (this.ballGraphics && this.ballGraphics.active) this.ballGraphics.destroy();
+      if (this.trailGraphics && this.trailGraphics.active) this.trailGraphics.destroy();
+      if (this.dynamicGraphics && this.dynamicGraphics.active) this.dynamicGraphics.destroy();
+      this.flipperGraphicsMap.forEach((rect) => {
+        if (rect && rect.active) rect.destroy();
+      });
+      this.flipperGraphicsMap.clear();
+      this.bumperGraphics.forEach((circle) => {
+        if (circle && circle.active) circle.destroy();
+      });
+      this.bumperGraphics = [];
+      if (this.plungerGraphics && this.plungerGraphics.active) this.plungerGraphics.destroy();
+      if (this.plungerTensionGraphics && this.plungerTensionGraphics.active) this.plungerTensionGraphics.destroy();
+    } catch (e) {
+      console.warn('Suppressing PhaserRenderer double-destroy exception:', e);
+    }
   }
 }

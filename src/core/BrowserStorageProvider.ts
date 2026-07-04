@@ -3,7 +3,7 @@ import { StorageProvider } from './StorageProvider';
 export class BrowserStorageProvider implements StorageProvider {
   async save(key: string, data: unknown): Promise<void> {
     try {
-      localStorage.setItem(key, JSON.stringify(data));
+      localStorage.setItem(`pinballzzz_${key}`, JSON.stringify(data));
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
     }
@@ -11,7 +11,7 @@ export class BrowserStorageProvider implements StorageProvider {
 
   async load<T>(key: string): Promise<T | null> {
     try {
-      const value = localStorage.getItem(key);
+      const value = localStorage.getItem(`pinballzzz_${key}`);
       if (value === null) {
         return null;
       }

@@ -4,7 +4,7 @@
 
 **Status:** ✅ Ready for prototype — Local v1.0 scope locked. Next milestone: vertical slice with replay round-trip.
 
-**Last updated:** 2026-06-30
+**Last updated:** 2026-07-03
 
 **Changelog v0.6:** Aligned with GDD v2.0 release split. **Local v1.0** = offline Electron desktop; **Online v1.1+** = Steam + server validation. Renamed `ugc/` → `src/levels/` (serialization/migration). Renamed `server/replay-runner/` → `tools/replay-runner/` (local CI, not hosted). Clear Check split into Playability Check (`verifier: "local"`) vs Verified Clear Check (`verifier: "server"`). Replay round-trip moved into M1 vertical slice. CI replay count phased: 1 → 5 → 30 → 50 (v1.0) → 100 (v1.1+). Added §14.1 performance verification plan.
 
@@ -52,7 +52,7 @@ These principles govern every decision in this document. New contributors should
 | **PC / Mac Build** | Electron | Wraps the Phaser web app as a native desktop binary (Local v1.0) |
 | **Steam Integration** | Online v1.1+ — evaluate before M5 (see §16 Q4) | GreenWorks has maintenance gaps; audit `steamworks.js` and alternatives before committing |
 | **Mobile / Tablet** | Post-launch via Capacitor | Same web build wrapped as iOS/Android; deferred to protect v1.0 PC/Mac focus |
-| **Target Framerate** | 60 fps display; Rapier fixed step at 1/60 s | Fixed timestep mandatory for replay determinism; display interpolates between steps |
+| **Target Framerate** | 60 fps display; 240Hz physics timestep (4 substeps of 1/240s per 1/60s frame) | Deliberate substepping optimization to prevent tunneling of high-speed ball/flipper collisions; mandatory for replay determinism |
 | **Switch** | ❌ Dropped from scope | Stack cannot target Switch |
 
 ---
@@ -306,7 +306,7 @@ bus.emit('BallImpact', { position: { x: 120, y: 340 }, impulse: 4.2 });
 
 * `PhaserRenderer` reads ball Y from `Simulation` and moves the Phaser camera with a configurable dead zone.
 * `SectorLoader` parses level JSON (after migration) into Rapier colliders and entity state in `WorldState`.
-* `SectorChunkManager` handles loading and unloading sector colliders dynamically so only the current Sector and the one immediately above are active in the Rapier world.
+ * `SectorChunkManager` handles loading and unloading sector colliders dynamically within a 250-metre buffer (500m total vertical coverage, approximately one full sector) around the ball's Y position to optimize performance and memory.
 
 ### 7.2 Checkpoint System
 
@@ -427,7 +427,7 @@ export function hashFinalPosition(pos: Vec2): string {
 
 ### System summary
 
-* **Fixed timestep:** Rapier stepped at exactly 1/60 s. Display interpolates.
+* **Fixed timestep:** Rapier stepped at 1/240 s with 4 substeps per frame (effective 60Hz display rate, 240Hz solver rate). Display interpolates.
 * **Seeded RNG:** `mulberry32` everywhere; never `Math.random()`.
 * **Input recording:** `InputRecorder` writes inputs using a schema of `{ frame: number, action: string, phase: "down" | "up" | "value", value?: number }` to capture flipper down/up state, plunger hold/release values, and analog pull dynamics.
 * **Replay playback:** `ReplayRunner` feeds seed + inputs into a fresh Rapier world.

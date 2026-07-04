@@ -15,9 +15,9 @@ export class Bumper {
     const bodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(x, y);
     this.body = physicsWorld.createRigidBody(bodyDesc);
 
-    // Circle collider with restitution to help bounce
+    // Circle collider with zero restitution to avoid double impulse (Priority 15)
     const colDesc = RAPIER.ColliderDesc.ball(radius)
-      .setRestitution(1.1);
+      .setRestitution(0.0);
     this.collider = physicsWorld.createCollider(colDesc, this.body);
   }
 

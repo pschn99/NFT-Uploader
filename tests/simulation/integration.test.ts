@@ -1,6 +1,5 @@
 import RAPIER from '@dimforge/rapier2d-compat';
 import { GameSession } from '../../src/simulation/session/GameSession';
-import { Anchor } from '../../src/simulation/entities/Anchor';
 import { FallFloor } from '../../src/simulation/entities/FallFloor';
 import { CheckpointSystem } from '../../src/simulation/systems/CheckpointSystem';
 import { WinConditionSystem } from '../../src/simulation/systems/WinConditionSystem';
@@ -12,25 +11,26 @@ describe('Simulation Integration: Tiers, Platforms & Recovery', () => {
 
   test('Anchor System: attach suspends the ball, detach releases it under gravity', () => {
     const session = new GameSession();
-    const anchor = new Anchor(session.simulation.physicsWorld);
+    const anchor = session.simulation.anchor;
     
     // Set dynamic ball position
     session.simulation.setBall(10.0, 15.0);
     
-    // Step once to assert it falls under normal gravity
-    session.simulation.physicsWorld.step();
-    const y1 = session.simulation.ball.getPosition().y;
-    expect(y1).toBeLessThan(15.0);
+    // Move ball close to the left wall (x = 1.0) so it's within the 2.5m wall anchor sensor radius
+    session.simulation.ball.reset(1.0, 15.0);
 
-    // Attach anchor
-    anchor.attach(session.simulation.ball);
+    // Deploy anchor (replaces oldest and places on closer wall x = 0.0)
+    anchor.deploy(session.simulation.ball, 0);
+    
+    // Step simulation to trigger the sensor overlap catch check
+    session.simulation.step([]);
     expect(anchor.isAttached()).toBe(true);
 
     const posAttached = session.simulation.ball.getPosition();
 
     // Step physics multiple frames with anchor active
     for (let i = 0; i < 10; i++) {
-      session.simulation.physicsWorld.step();
+      session.simulation.step([]);
     }
 
     const posAfterSteps = session.simulation.ball.getPosition();
@@ -39,16 +39,16 @@ describe('Simulation Integration: Tiers, Platforms & Recovery', () => {
     expect(posAfterSteps.x).toBeCloseTo(posAttached.x, 3);
     expect(posAfterSteps.y).toBeCloseTo(posAttached.y, 3);
 
-    // Detach anchor
-    anchor.detach();
+    // Release anchor
+    anchor.release();
     expect(anchor.isAttached()).toBe(false);
 
     // Step physics and verify ball starts falling again
-    session.simulation.physicsWorld.step();
+    session.simulation.step([]);
     const yAfterRelease = session.simulation.ball.getPosition().y;
     expect(yAfterRelease).toBeLessThan(posAfterSteps.y);
 
-    anchor.detach();
+    anchor.destroy();
     session.destroy();
   });
 
@@ -147,13 +147,13 @@ describe('Simulation Integration: Tiers, Platforms & Recovery', () => {
     });
 
     // Ball is still below 500m
-    let won = WinConditionSystem.check(session.simulation.ball, session.simulation.eventBus, 12345);
+    let won = WinConditionSystem.check(session.simulation.ball, [], session.simulation.eventBus, 12345);
     expect(won).toBe(false);
     expect(winEventFired).toBe(false);
 
     // Move ball above 500m
     session.simulation.ball.reset(10.24, 502.0);
-    won = WinConditionSystem.check(session.simulation.ball, session.simulation.eventBus, 12345);
+    won = WinConditionSystem.check(session.simulation.ball, [], session.simulation.eventBus, 12345);
     expect(won).toBe(true);
     expect(winEventFired).toBe(true);
 

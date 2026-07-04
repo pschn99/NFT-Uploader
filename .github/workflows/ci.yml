@@ -42,6 +42,7 @@ jobs:
   replay-regression:
     runs-on: ubuntu-latest
     needs: build-and-test
+    timeout-minutes: 10
 
     steps:
     - name: Checkout repository

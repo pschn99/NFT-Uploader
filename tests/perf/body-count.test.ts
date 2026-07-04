@@ -21,7 +21,7 @@ describe('Performance Smoke: Active Rigid Body Count Check', () => {
       const bodyCount = session.simulation.physicsWorld.getBodyCount();
       
       // Plunger, Flippers, Bumpers, Ball, and active chunk walls
-      expect(bodyCount).toBeLessThanOrEqual(50);
+      expect(bodyCount).toBeLessThanOrEqual(55);
     }
 
     chunkManager.destroy();

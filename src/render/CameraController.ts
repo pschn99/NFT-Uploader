@@ -6,6 +6,7 @@ export class CameraController {
   private camera: Phaser.Cameras.Scene2D.Camera;
   private ball: Ball;
 
+  private scrollX = 0;
   private scrollY = 0;
   private screenHeight: number;
   private topThreshold = 250;    // Pixels from top of screen before scrolling up
@@ -16,7 +17,11 @@ export class CameraController {
     this.ball = ball;
     this.screenHeight = camera.height;
     this.bottomThreshold = this.screenHeight - 250;
-    this.camera.setScroll(0, 0);
+    
+    // Center the 20.48m (655.36px) play area horizontally on the screen
+    const playAreaWidthPx = 20.48 * PIXELS_PER_METRE;
+    this.scrollX = (playAreaWidthPx - camera.width) / 2;
+    this.camera.setScroll(this.scrollX, 0);
   }
 
   /**
@@ -44,7 +49,7 @@ export class CameraController {
       this.scrollY = 0;
     }
 
-    this.camera.setScroll(0, this.scrollY);
+    this.camera.setScroll(this.scrollX, this.scrollY);
   }
 
   getScrollY(): number {
@@ -53,6 +58,6 @@ export class CameraController {
 
   reset(): void {
     this.scrollY = 0;
-    this.camera.setScroll(0, 0);
+    this.camera.setScroll(this.scrollX, 0);
   }
 }

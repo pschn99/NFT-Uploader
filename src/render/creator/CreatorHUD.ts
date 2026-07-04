@@ -170,7 +170,15 @@ export class CreatorHUD {
 
     btn.on('pointerover', () => btn.setAlpha(0.8));
     btn.on('pointerout',  () => btn.setAlpha(1.0));
-    btn.on('pointerdown', () => { void onClick(); });
+    btn.on('pointerdown', () => {
+      const res = onClick();
+      if (res instanceof Promise) {
+        res.catch((err) => {
+          console.error('CreatorHUD button error:', err);
+          this.setExportStatus(`ERROR: ${err.message}`, '#FF3333');
+        });
+      }
+    });
 
     this.container.add([btn, text]);
     return x + btnW + 6;

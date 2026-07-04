@@ -1,0 +1,41 @@
+{
+  "format_version": 3,
+  "sector_height_m": 120,
+  "blocks": [
+    {
+      "type": "plunger",
+      "grid_x": 31,
+      "grid_y": 10
+    },
+    {
+      "type": "flipper_left",
+      "grid_x": 11,
+      "grid_y": 15
+    },
+    {
+      "type": "flipper_right",
+      "grid_x": 18,
+      "grid_y": 15
+    },
+    {
+      "type": "wall",
+      "grid_x": 5,
+      "grid_y": 20
+    },
+    {
+      "type": "wall",
+      "grid_x": 25,
+      "grid_y": 20
+    },
+    {
+      "type": "bumper_standard",
+      "grid_x": 15,
+      "grid_y": 30
+    },
+    {
+      "type": "exit",
+      "grid_x": 15,
+      "grid_y": 115
+    }
+  ]
+}

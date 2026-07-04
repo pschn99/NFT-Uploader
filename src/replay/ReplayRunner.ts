@@ -50,7 +50,7 @@ export class ReplayRunner {
     }
 
     // 6. Compute path hash and compare
-    const actualHash = ReplayHash.calculateSequence(pathHistory);
+    const actualHash = await ReplayHash.calculateSequence(pathHistory);
     const success = actualHash === replay.expectedHash;
 
     // Clean up

@@ -10,7 +10,8 @@
     "lint": "eslint \"src/**/*.ts\" \"electron/**/*.ts\"",
     "test": "jest",
     "electron:dev": "tsc -p tsconfig.electron.json && concurrently -k \"npm run dev\" \"tsc -p tsconfig.electron.json -w\" \"electron .\"",
-    "electron:build": "npm run build && tsc -p tsconfig.electron.json && electron .",
+    "electron:build": "npm run build && tsc -p tsconfig.electron.json && NODE_ENV=production electron .",
+    "electron:start": "npm run electron:build",
     "rapier-bump-check": "ts-node -O '{\"module\": \"commonjs\"}' tools/rapier-bump-check.ts",
     "replay-ci": "ts-node -O '{\"module\": \"commonjs\"}' tools/replay-runner/index.ts tests/replays"
   },

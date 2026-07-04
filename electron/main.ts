@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
 
 // ---------------------------------------------------------------------------
 // IPC: Creator Studio file dialog handlers

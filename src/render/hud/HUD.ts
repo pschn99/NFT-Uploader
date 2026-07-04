@@ -1,12 +1,15 @@
 import Phaser from 'phaser';
 import { GameSession } from '../../simulation/session/GameSession';
+import { CampaignManager } from '../../tower/CampaignManager';
 
 export class HUD {
+  private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private heightText!: Phaser.GameObjects.Text;
   private statsText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene) {
+    this.scene = scene;
     this.container = scene.add.container(20, 20).setScrollFactor(0);
     this.setupVisuals(scene);
   }
@@ -49,7 +52,13 @@ export class HUD {
     const nudgeSlots = '✦ '.repeat(nudges) + '✧ '.repeat(3 - nudges);
     const anchorSlots = '⬢ '.repeat(anchors) + '⬡ '.repeat(2 - anchors);
 
-    let stats = `=== CAMPAIGN RUN TOWER 0 ===\n`;
+    const sectorIndex = (this.scene as any).currentSectorIndex ?? 0;
+    const titleCard = CampaignManager.getTitleCard(sectorIndex);
+    const headerTitle = sectorIndex === -1
+      ? 'TEST PLAY RUN'
+      : (sectorIndex >= 6 ? 'THE ABYSS ∞' : `CAMPAIGN RUN: ${titleCard.name.toUpperCase()}`);
+
+    let stats = `=== ${headerTitle} ===\n`;
     stats += `- Run Time       : ${timeSec}s\n`;
     stats += `- Nudge Slots    : ${nudgeSlots}\n`;
     stats += `- Anchor Slots   : ${anchorSlots}\n`;

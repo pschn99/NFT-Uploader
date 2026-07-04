@@ -41,12 +41,13 @@ export class ReplaySystem {
   /**
    * Compiles the recorded inputs, duration, and coordinates history into the export format.
    */
-  exportReplay(seed = 12345): ReplayData {
+  async exportReplay(seed?: number): Promise<ReplayData> {
+    const finalSeed = seed !== undefined ? seed : this.session.simulation.seed;
     const inputs = this.recorder.getEntries();
-    const hash = ReplayHash.calculateSequence(this.pathHistory);
+    const hash = await ReplayHash.calculateSequence(this.pathHistory);
 
     return {
-      seed,
+      seed: finalSeed,
       durationFrames: this.session.simulation.frameIndex,
       inputs,
       expectedHash: hash

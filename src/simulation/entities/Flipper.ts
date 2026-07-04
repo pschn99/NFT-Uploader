@@ -3,6 +3,7 @@ import { PhysicsWorld } from '../PhysicsWorld';
 
 export class Flipper {
   public body: RAPIER.RigidBody;
+  public pivotBody: RAPIER.RigidBody;
   public joint: RAPIER.RevoluteImpulseJoint;
   public side: 'left' | 'right';
   public length = 1.6;
@@ -14,7 +15,7 @@ export class Flipper {
   private stiffness = 2000.0;
   private damping = 50.0;
   
-  private targetSpeed = 30.0; // rad/s stroke velocity (validated in M0.5 spike verdict: 5/5 rating)
+  private targetSpeed = 45.0; // rad/s stroke velocity (validated in M0.5 spike verdict: 5/5 rating)
   private velocityDamping = 300.0; // high gain for arcade-like snappy solenoid flips
 
   constructor(
@@ -31,7 +32,7 @@ export class Flipper {
 
     // 1. Create fixed anchor body at pivot position
     const pivotDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(x, y);
-    const pivotBody = physicsWorld.createRigidBody(pivotDesc);
+    this.pivotBody = physicsWorld.createRigidBody(pivotDesc);
 
     // 2. Create dynamic flipper body starting at its resting limit angle
     const initialAngle = side === 'left' ? minAngle : maxAngle;
@@ -49,7 +50,7 @@ export class Flipper {
 
     // 3. Connect via RevoluteJoint
     const jointDesc = RAPIER.JointData.revolute({ x: 0, y: 0 }, { x: 0, y: 0 });
-    this.joint = physicsWorld.createImpulseJoint(jointDesc, pivotBody, this.body, true) as RAPIER.RevoluteImpulseJoint;
+    this.joint = physicsWorld.createImpulseJoint(jointDesc, this.pivotBody, this.body, true) as RAPIER.RevoluteImpulseJoint;
     
     // Explicitly configure joint limits and motor models on the dynamic joint
     this.joint.setLimits(minAngle, maxAngle);

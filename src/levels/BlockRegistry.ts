@@ -55,6 +55,9 @@ export interface BlockDescriptor {
 // Registry entries
 // ---------------------------------------------------------------------------
 
+// Flipper snap angles (radians) shared with migration and render systems (Priority 18)
+export const FLIPPER_SNAP_ANGLES_RAD = [0, Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2, -Math.PI / 6];
+
 const HALF_CELL = 0.32;  // Half of GRID_CELL_METRES (0.64 m / 2)
 
 const REGISTRY: Record<BlockType, BlockDescriptor> = {
@@ -69,14 +72,14 @@ const REGISTRY: Record<BlockType, BlockDescriptor> = {
     type: 'flipper_left',
     category: 'flipper',
     defaultCollider: { shape: 'cuboid', hx: 0.8, hy: 0.1 },
-    snapAngles: [0, Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2, -Math.PI / 6],
+    snapAngles: FLIPPER_SNAP_ANGLES_RAD,
     label: 'Flipper (Left)',
   },
   flipper_right: {
     type: 'flipper_right',
     category: 'flipper',
     defaultCollider: { shape: 'cuboid', hx: 0.8, hy: 0.1 },
-    snapAngles: [0, Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2, -Math.PI / 6],
+    snapAngles: FLIPPER_SNAP_ANGLES_RAD,
     label: 'Flipper (Right)',
   },
   bumper_standard: {

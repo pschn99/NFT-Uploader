@@ -16,8 +16,9 @@ export class SectorChunkManager {
   // Maps wall index in allWalls array to spawned physics rigid body
   private spawnedWalls = new Map<number, RAPIER.RigidBody>();
 
-  // Buffer range: 120 meters around active ball Y height (covers a reasonable portion of the sector)
-  private loadRange = 120.0;
+  // Buffer range: 250m around the ball gives 500m total vertical coverage — approximately
+  // one full sector (TDD §7.1: "current Sector and the one immediately above are active").
+  private loadRange = 250.0;
 
   constructor(simulation: Simulation, walls: WallData[]) {
     this.simulation = simulation;

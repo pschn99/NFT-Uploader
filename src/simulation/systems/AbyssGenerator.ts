@@ -16,6 +16,8 @@
 
 import { Simulation } from '../Simulation';
 import { GRID_CELL_METRES, BUMPER_RADIUS } from '../constants';
+import { Bumper } from '../entities/Bumper';
+import { Flipper } from '../entities/Flipper';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -27,8 +29,8 @@ const PLAY_AREA_CENTRE_X = 9.125;      // Centre of play area
 const LEFT_FLIPPER_X = 6.925;
 const RIGHT_FLIPPER_X = 11.325;
 const SLOPE_LEFT_X = 3.56;
-const SLOPE_RIGHT_X = 14.69;
-const SLOPE_HX = 3.56;
+const SLOPE_RIGHT_X = 14.685;
+const SLOPE_HX = 3.96;
 const SLOPE_HY = 0.2;
 const SLOPE_ROTATION = 0.45;
 const WALL_HX = 0.25;
@@ -42,6 +44,10 @@ interface AbyssChunk {
   topY: number;
   /** Rapier rigid bodies spawned for this chunk — collected for cleanup. */
   bodies: import('@dimforge/rapier2d-compat').RigidBody[];
+  /** Procedural bumpers spawned for this chunk — collected for cleanup. */
+  bumpers: Bumper[];
+  /** Procedural flippers spawned for this chunk — collected for cleanup. */
+  flippers: Flipper[];
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +109,12 @@ export class AbyssGenerator {
         for (const body of chunk.bodies) {
           this.simulation.removeStaticBody(body);
         }
+        for (const bumper of chunk.bumpers) {
+          this.simulation.removeBumper(bumper);
+        }
+        for (const flipper of chunk.flippers) {
+          this.simulation.removeFlipper(flipper);
+        }
         return false;
       }
       return true;
@@ -118,6 +130,12 @@ export class AbyssGenerator {
       for (const body of chunk.bodies) {
         this.simulation.removeStaticBody(body);
       }
+      for (const bumper of chunk.bumpers) {
+        this.simulation.removeBumper(bumper);
+      }
+      for (const flipper of chunk.flippers) {
+        this.simulation.removeFlipper(flipper);
+      }
     }
     this.chunks = [];
   }
@@ -128,6 +146,8 @@ export class AbyssGenerator {
 
   private generateChunk(topY: number): void {
     const bodies: import('@dimforge/rapier2d-compat').RigidBody[] = [];
+    const bumpers: Bumper[] = [];
+    const flippers: Flipper[] = [];
     const centreY = topY + CHUNK_HEIGHT_M / 2;
 
     // 1. Side walls (full chunk height)
@@ -145,19 +165,18 @@ export class AbyssGenerator {
       this.simulation.createStaticWall(SLOPE_RIGHT_X, slopeY, SLOPE_HX, SLOPE_HY,  SLOPE_ROTATION)
     );
 
-    // Flippers are dynamic and managed by Simulation — we record their bodies
-    this.simulation.addFlipper('left',  LEFT_FLIPPER_X,  flipperY);
-    this.simulation.addFlipper('right', RIGHT_FLIPPER_X, flipperY);
+    // Flippers are dynamic and managed by Simulation — we record their bodies (Priority 11)
+    flippers.push(
+      this.simulation.addFlipper('left',  LEFT_FLIPPER_X,  flipperY),
+      this.simulation.addFlipper('right', RIGHT_FLIPPER_X, flipperY)
+    );
 
-    // 3. Procedural bumpers — 2–4 per chunk, random positions
+    // 3. Procedural bumpers — 2–4 per chunk, random positions (Priority 11)
     const bumperCount = 2 + Math.floor(this.rng() * 3); // 2, 3 or 4
     for (let i = 0; i < bumperCount; i++) {
       const bx = 2.0 + this.rng() * (PLAY_AREA_WIDTH_M - 4.0);
       const by = topY + 20 + this.rng() * (CHUNK_HEIGHT_M - 40);
-      this.simulation.addBumper(bx, by, BUMPER_RADIUS);
-      // Note: addBumper creates bodies internally; we don't track them here
-      // because bumpers outside the load range would need separate unload logic.
-      // Acceptable for Abyss scope — bumpers are lightweight.
+      bumpers.push(this.simulation.addBumper(bx, by, BUMPER_RADIUS));
     }
 
     // 4. Optional mid-chunk interior wall platform (50% chance)
@@ -170,6 +189,6 @@ export class AbyssGenerator {
       );
     }
 
-    this.chunks.push({ topY, bodies });
+    this.chunks.push({ topY, bodies, bumpers, flippers });
   }
 }

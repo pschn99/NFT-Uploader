@@ -16,8 +16,6 @@
 
 import Phaser from 'phaser';
 import type { LevelData } from '../../levels/LevelData';
-import { GameSession } from '../../simulation/session/GameSession';
-import { SectorLoader } from '../../tower/SectorLoader';
 import { ReplaySystem } from '../../replay/ReplaySystem';
 
 // ---------------------------------------------------------------------------
@@ -45,7 +43,6 @@ export interface TestPlayResult {
 
 export class CreatorTestPlay {
   private scene: Phaser.Scene;
-  private session: GameSession | null = null;
   private levelSnapshot: LevelData | null = null;
 
   constructor(scene: Phaser.Scene) {
@@ -64,12 +61,6 @@ export class CreatorTestPlay {
   launch(levelData: LevelData, onEnd: (result: TestPlayResult) => void): void {
     // Take a deep snapshot to insulate the session from future editor edits
     this.levelSnapshot = JSON.parse(JSON.stringify(levelData)) as LevelData;
-
-    // Create a fresh GameSession for the test run
-    this.session = new GameSession();
-
-    // Wire level into simulation
-    SectorLoader.load(this.session.simulation, this.levelSnapshot);
 
     // Pass context to GameScene via scene data
     const context: TestPlayContext = {
@@ -90,10 +81,6 @@ export class CreatorTestPlay {
    * Safe to call multiple times (idempotent).
    */
   restore(): void {
-    if (this.session) {
-      this.session.destroy();
-      this.session = null;
-    }
     this.levelSnapshot = null;
     this.scene.scene.stop('GameScene');
     this.scene.scene.resume('CreatorScene');

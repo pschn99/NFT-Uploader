@@ -5,6 +5,7 @@ import { Ball } from './Ball';
 export class Plunger {
   public body: RAPIER.RigidBody;
   public collider: RAPIER.Collider;
+  public sensorCollider: RAPIER.Collider;
 
   private charge = 0.0;
   private maxImpulse = 28.0; // Launch impulse applied to ball at full charge
@@ -18,6 +19,12 @@ export class Plunger {
     const colDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.1)
       .setRestitution(0.1);
     this.collider = physicsWorld.createCollider(colDesc, this.body);
+
+    // 3. Sensor collider above the plunger plate to detect ball contact (TDD §5.4)
+    const sensorDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.4)
+      .setSensor(true)
+      .setTranslation(0.0, 0.5);
+    this.sensorCollider = physicsWorld.createCollider(sensorDesc, this.body);
   }
 
   /**

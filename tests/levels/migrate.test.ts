@@ -213,6 +213,6 @@ describe('levelDataToSectorData', () => {
     const level = migrateToLatest(legacyV1NoVersion);
     const sector = levelDataToSectorData(level);
     expect(sector.plunger).toBeDefined();
-    expect(sector.ball.y).toBeCloseTo(sector.plunger!.y - 0.8, 2);
+    expect(sector.ball.y).toBeCloseTo(sector.plunger!.y + 0.8, 2);
   });
 });

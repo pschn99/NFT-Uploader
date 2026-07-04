@@ -1,5 +1,5 @@
 {
-  "seed": 12345,
+  "seed": 55555,
   "durationFrames": 1800,
   "inputs": [
     {
@@ -160,178 +160,118 @@
     {
       "frame": 36,
       "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 37,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 38,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 39,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 40,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 41,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 42,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 43,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 44,
-      "action": "plunger",
-      "phase": "down"
-    },
-    {
-      "frame": 45,
-      "action": "plunger",
       "phase": "up"
     },
     {
-      "frame": 104,
+      "frame": 120,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 119,
-      "action": "flipper_left",
-      "phase": "up"
-    },
-    {
-      "frame": 207,
+      "frame": 270,
       "action": "flipper_left",
       "phase": "down"
     },
     {
-      "frame": 222,
+      "frame": 420,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 570,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 720,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 870,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1020,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1170,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1320,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1470,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 1620,
+      "action": "flipper_left",
+      "phase": "down"
+    },
+    {
+      "frame": 135,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 310,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 325,
+      "frame": 285,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 413,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 428,
+      "frame": 435,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 516,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 531,
+      "frame": 585,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 619,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 634,
+      "frame": 735,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 722,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 737,
+      "frame": 885,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 767,
-      "action": "nudge_left",
-      "phase": "down"
-    },
-    {
-      "frame": 825,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 840,
+      "frame": 1035,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 928,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 943,
+      "frame": 1185,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1031,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 1046,
+      "frame": 1335,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1134,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 1149,
+      "frame": 1485,
       "action": "flipper_left",
       "phase": "up"
     },
     {
-      "frame": 1237,
-      "action": "flipper_left",
-      "phase": "down"
-    },
-    {
-      "frame": 1252,
+      "frame": 1635,
       "action": "flipper_left",
       "phase": "up"
     }
   ],
-  "expectedHash": "130eff45d5015aabfbdf1080ecb5c8176f4db32652bde5f385499d11bef15456"
+  "expectedHash": "2b6e67ba34ee4034c88c33c9bdf81fd5e28fbebde2b68cb386bd1c8346b1cb00"
 }

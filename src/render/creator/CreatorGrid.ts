@@ -16,24 +16,19 @@
 import Phaser from 'phaser';
 import type { BlockEntry, BlockType } from '../../levels/LevelData';
 import { getBlockDescriptor, getAllBlockDescriptors } from '../../levels/BlockRegistry';
-import { GRID_CELL_METRES } from '../../simulation/constants';
+import { GRID_CELL_METRES, GRID_CELL_PIXELS } from '../../simulation/constants';
+import { drawBlock } from '../BlockRenderer';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const GRID_CELL_PX = 32; // Logical grid cell size in screen pixels
-const GRID_COLOR = 0x222222;
-const GRID_ALPHA = 0.4;
-const BLOCK_COLORS: Record<BlockType, number> = {
-  wall:            0xFFFFFF,
-  flipper_left:    0x88AAFF,
-  flipper_right:   0xFF8888,
-  bumper_standard: 0xFFFF00,
-  plunger:         0x00FFAA,
-  checkpoint:      0x00FF00,
-  exit:            0xFFAA00,
-};
+/** GRID_CELL_PX / GRID_CELL_METRES = 32 / 0.64 = 50 = PIXELS_PER_METRE. */
+const GRID_CELL_PX = GRID_CELL_PIXELS;
+const GRID_COLOR   = 0x222222;
+const GRID_ALPHA   = 0.4;
+/** ppm passed to BlockRenderer — equals PIXELS_PER_METRE, ensuring 1:1 visual parity with the game. */
+const EDITOR_PPM   = GRID_CELL_PX / GRID_CELL_METRES; // = 50
 
 // ---------------------------------------------------------------------------
 // CreatorGrid
@@ -43,6 +38,8 @@ export class CreatorGrid {
   private scene: Phaser.Scene;
   private gridGraphics: Phaser.GameObjects.Graphics;
   private blockGraphics: Phaser.GameObjects.Graphics;
+  private ghostGraphics: Phaser.GameObjects.Graphics;
+  private coordinateText: Phaser.GameObjects.Text;
   private blocks: BlockEntry[] = [];
   private selectedType: BlockType = 'wall';
   private selectedRotationIndex = 0;
@@ -65,6 +62,15 @@ export class CreatorGrid {
 
     this.gridGraphics  = scene.add.graphics();
     this.blockGraphics = scene.add.graphics();
+    this.ghostGraphics = scene.add.graphics().setDepth(100);
+    
+    this.coordinateText = scene.add.text(0, 0, '', {
+      fontSize: '11px',
+      color: '#00ffff',
+      backgroundColor: '#0a0a0c',
+      padding: { x: 6, y: 4 },
+      fontFamily: 'monospace'
+    }).setDepth(3000).setOrigin(0, 0).setVisible(false);
 
     this.drawGrid();
     this.registerInputHandlers();
@@ -130,6 +136,8 @@ export class CreatorGrid {
   destroy(): void {
     this.gridGraphics.destroy();
     this.blockGraphics.destroy();
+    this.ghostGraphics.destroy();
+    this.coordinateText.destroy();
   }
 
   // ---------------------------------------------------------------------------
@@ -161,11 +169,49 @@ export class CreatorGrid {
   }
 
   private drawBlock(block: BlockEntry): void {
-    const color = BLOCK_COLORS[block.type] ?? 0xFFFFFF;
-    const px = block.grid_x * GRID_CELL_PX;
-    const py = block.grid_y * GRID_CELL_PX;
-    this.blockGraphics.fillStyle(color, 0.85);
-    this.blockGraphics.fillRect(px + 1, py + 1, GRID_CELL_PX - 2, GRID_CELL_PX - 2);
+    const desc   = getBlockDescriptor(block.type);
+    const angle  = desc.snapAngles[block.rotation_index ?? 0] ?? 0;
+    // Grid-cell centre in Phaser-space pixels (Y increases downward)
+    const cx = block.grid_x * GRID_CELL_PX + GRID_CELL_PX / 2;
+    const cy = block.grid_y * GRID_CELL_PX + GRID_CELL_PX / 2;
+    drawBlock({
+      gfx:      this.blockGraphics,
+      type:     block.type,
+      cx, cy,
+      ppm:      EDITOR_PPM,
+      rotation: angle,
+      context:  'editor',
+      radiusOverride:
+        typeof block.params?.['radius'] === 'number'
+          ? (block.params['radius'] as number)
+          : undefined,
+    });
+  }
+
+  /**
+   * Draws a translucent ghost of the currently selected block type under the
+   * pointer, showing exactly what will be placed before the user clicks.
+   */
+  private drawGhostPreview(pointer: Phaser.Input.Pointer): void {
+    this.ghostGraphics.clear();
+
+    const { gridX, gridY } = this.worldToGrid(pointer);
+    if (gridX < 0 || gridX >= this.gridCols || gridY < 0 || gridY >= this.gridRows) return;
+
+    const desc  = getBlockDescriptor(this.selectedType);
+    const angle = desc.snapAngles[this.selectedRotationIndex] ?? 0;
+    const cx = gridX * GRID_CELL_PX + GRID_CELL_PX / 2;
+    const cy = gridY * GRID_CELL_PX + GRID_CELL_PX / 2;
+
+    this.ghostGraphics.setAlpha(0.4);
+    drawBlock({
+      gfx:      this.ghostGraphics,
+      type:     this.selectedType,
+      cx, cy,
+      ppm:      EDITOR_PPM,
+      rotation: angle,
+      context:  'editor',
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -180,17 +226,42 @@ export class CreatorGrid {
         this.isDragging = true;
         this.placeBlockAt(pointer);
       }
+      this.updateCoordinateReadout(pointer);
     });
 
     this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.isDragging && !pointer.rightButtonDown()) {
         this.placeBlockAt(pointer);
       }
+      this.updateCoordinateReadout(pointer);
+      this.drawGhostPreview(pointer);
     });
 
     this.scene.input.on('pointerup', () => {
       this.isDragging = false;
     });
+
+    this.scene.input.on('gameout', () => {
+      this.coordinateText.setVisible(false);
+      this.ghostGraphics.clear();
+    });
+  }
+
+  private updateCoordinateReadout(pointer: Phaser.Input.Pointer): void {
+    const { gridX, gridY } = this.worldToGrid(pointer);
+
+    // Bounds check
+    if (gridX < 0 || gridX >= this.gridCols || gridY < 0 || gridY >= this.gridRows) {
+      this.coordinateText.setVisible(false);
+      return;
+    }
+
+    const mx = (gridX * GRID_CELL_METRES).toFixed(2);
+    const my = (gridY * GRID_CELL_METRES).toFixed(2);
+
+    this.coordinateText.setText(`G: (${gridX}, ${gridY})\nW: (${mx}m, ${my}m)`);
+    this.coordinateText.setPosition(pointer.worldX + 16, pointer.worldY + 16);
+    this.coordinateText.setVisible(true);
   }
 
   private worldToGrid(pointer: Phaser.Input.Pointer): { gridX: number; gridY: number } {

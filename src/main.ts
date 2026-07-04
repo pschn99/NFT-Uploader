@@ -15,6 +15,10 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 768,
   backgroundColor: '#000000',
   parent: 'game-container',
+  input: {
+    gamepad: true,
+    keyboard: true
+  },
   scene: [BootScene, MenuScene, GameScene, CreatorScene, FlipperSpike, FallFloorSpike],
 };
 

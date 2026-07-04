@@ -9,7 +9,9 @@
 import RAPIER from '@dimforge/rapier2d-compat';
 import { GameSession } from '../../src/simulation/session/GameSession';
 import { SectorLoader } from '../../src/tower/SectorLoader';
+import { AbyssGenerator } from '../../src/simulation/systems/AbyssGenerator';
 import sector00 from '../../levels/campaign/sector_00.json';
+import sector05 from '../../levels/campaign/sector_05.json';
 
 describe('Performance: SectorChunkManager Chunk Unload', () => {
   beforeAll(async () => {
@@ -73,5 +75,32 @@ describe('Performance: SectorChunkManager Chunk Unload', () => {
     expect(countAfter).toBeLessThan(countBefore);
 
     session.destroy();
+  });
+
+  test('Sector 5 -> Abyss transition unloads campaign walls and generates procedural chunks keeping bodies <= 50', () => {
+    // 1. Start and run in Sector 5 (ball Y around 450m)
+    const sessionCampaign = new GameSession();
+    const chunkManager = SectorLoader.load(sessionCampaign.simulation, sector05);
+    chunkManager.update(450);
+    const bodiesInSector5 = sessionCampaign.simulation.physicsWorld.getBodyCount();
+    expect(bodiesInSector5).toBeLessThanOrEqual(80);
+
+    // Clean up campaign session completely (simulates scene transition / destroy)
+    chunkManager.destroy();
+    sessionCampaign.destroy();
+
+    // 2. Start fresh in Abyss (simulates new GameScene loading the Abyss)
+    const sessionAbyss = new GameSession();
+    const abyssGenerator = new AbyssGenerator(sessionAbyss.simulation, 12345, 500.0);
+    
+    // Simulate ball moving deep into the Abyss (Y = 650m)
+    abyssGenerator.update(650);
+    
+    const bodiesInAbyss = sessionAbyss.simulation.physicsWorld.getBodyCount();
+    console.log(`Bodies in Abyss at Y=650: ${bodiesInAbyss}`);
+    expect(bodiesInAbyss).toBeLessThanOrEqual(50);
+    
+    abyssGenerator.destroy();
+    sessionAbyss.destroy();
   });
 });
