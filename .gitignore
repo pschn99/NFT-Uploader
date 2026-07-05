@@ -1,28 +1,14 @@
-# Dependencies
-node_modules/
+# Godot-specific excludes
+.godot/
 
-# Production builds
-dist/
+# Exclude Godot export binaries
 build/
+bin/
 
-# IDEs and editors
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.swp
+# Exclude user settings/cache directories
+.import/
+export_presets.cfg
+
+# System files
 .DS_Store
 Thumbs.db
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-eslint-debug.log*
-*.log
-
-# Precompiled Electron app templates or packages
-release/
-out/
