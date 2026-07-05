@@ -48,6 +48,16 @@
     { "type": "checkpoint", "grid_x": 16, "grid_y": 313 },
     { "type": "checkpoint", "grid_x": 16, "grid_y": 469 },
     { "type": "checkpoint", "grid_x": 16, "grid_y": 625 },
+    { "type": "wall",       "grid_x": 5,  "grid_y": 18, "params": { "hx": 2.0, "hy": 0.15, "rotation": -0.35 } },
+    { "type": "wall",       "grid_x": 26, "grid_y": 18, "params": { "hx": 2.0, "hy": 0.15, "rotation": 0.35 } },
+    { "type": "bumper_standard", "grid_x": 11, "grid_y": 28, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 21, "grid_y": 28, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 16, "grid_y": 36, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 11, "grid_y": 44, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 21, "grid_y": 44, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 8,  "grid_y": 56, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 16, "grid_y": 56, "params": { "radius": 0.6 } },
+    { "type": "bumper_standard", "grid_x": 23, "grid_y": 56, "params": { "radius": 0.6 } },
     { "type": "exit",       "grid_x": 16, "grid_y": 812 }
   ]
 }

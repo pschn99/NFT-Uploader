@@ -11,6 +11,7 @@ import { SectorTransition } from '../transitions/SectorTransition';
 import { SectorChunkManager } from '../../tower/SectorChunkManager';
 import { AudioSystem } from '../../audio/AudioSystem';
 import { CampaignManager, ABYSS_SECTOR_INDEX } from '../../tower/CampaignManager';
+import { QuickPlayManager } from '../../tower/QuickPlayManager';
 import { TestPlayContext } from './CreatorTestPlay';
 import { AbyssGenerator } from '../../simulation/systems/AbyssGenerator';
 import { LevelData } from '../../levels/LevelData';
@@ -36,19 +37,27 @@ export class GameScene extends Phaser.Scene {
 
   private testPlayContext: TestPlayContext | null = null;
   private currentSectorIndex = 0;
+  private quickPlayIndex = -1;
   private campaignManager = new CampaignManager();
+  private quickPlayManager = new QuickPlayManager();
 
   constructor() {
     super('GameScene');
   }
 
-  init(data?: { creatorTestPlay?: TestPlayContext; sectorIndex?: number }) {
+  init(data?: { creatorTestPlay?: TestPlayContext; sectorIndex?: number; quickPlayIndex?: number }) {
     if (data && data.creatorTestPlay) {
       this.testPlayContext = data.creatorTestPlay;
       this.currentSectorIndex = -1;
+      this.quickPlayIndex = -1;
+    } else if (data?.quickPlayIndex !== undefined && data.quickPlayIndex >= 0) {
+      this.testPlayContext = null;
+      this.currentSectorIndex = -1;
+      this.quickPlayIndex = data.quickPlayIndex;
     } else {
       this.testPlayContext = null;
       this.currentSectorIndex = data?.sectorIndex ?? 0;
+      this.quickPlayIndex = -1;
     }
   }
 
@@ -74,6 +83,8 @@ export class GameScene extends Phaser.Scene {
     // 3. Load appropriate level data dynamically
     if (this.testPlayContext) {
       this.setupSimulation(this.testPlayContext.levelData);
+    } else if (this.quickPlayIndex >= 0) {
+      void this.loadQuickPlayLevel(this.quickPlayIndex);
     } else if (this.currentSectorIndex >= ABYSS_SECTOR_INDEX) {
       this.setupAbyssSimulation();
     } else {
@@ -89,6 +100,24 @@ export class GameScene extends Phaser.Scene {
       console.error('Failed to load campaign sector:', err);
       this.scene.start('MenuScene');
     }
+  }
+
+  private async loadQuickPlayLevel(index: number) {
+    try {
+      const levelData = await this.quickPlayManager.loadLevel(index);
+      this.setupSimulation(levelData);
+    } catch (err) {
+      console.error('Failed to load quick-play level:', err);
+      this.scene.start('LevelSelectScene');
+    }
+  }
+
+  private getTitleCard() {
+    if (this.quickPlayIndex >= 0) {
+      const entry = QuickPlayManager.getEntry(this.quickPlayIndex);
+      return { name: entry.name, tagline: entry.description };
+    }
+    return CampaignManager.getTitleCard(this.currentSectorIndex);
   }
 
   private setupSimulation(levelData: LevelData) {
@@ -117,11 +146,12 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown', () => this.audioSystem?.init());
 
     // 6. Show title card and camera flash (per GDD §7: full-screen inversion + title card)
-    const card = CampaignManager.getTitleCard(this.currentSectorIndex);
+    const card = this.getTitleCard();
     SectorTransition.showTitleCard(this, card.name, card.tagline);
     SectorTransition.fadeIn(this);
 
-    console.log(`Campaign simulation loaded: ${levelData.name} (Sector ${this.currentSectorIndex})`);
+    const mode = this.quickPlayIndex >= 0 ? 'Quick Play' : 'Campaign';
+    console.log(`${mode} simulation loaded: ${levelData.name} (index ${Math.max(this.currentSectorIndex, this.quickPlayIndex)})`);
   }
 
   private setupAbyssSimulation() {
@@ -240,6 +270,8 @@ export class GameScene extends Phaser.Scene {
       this.togglePause();
       if (this.testPlayContext) {
         this.scene.start('GameScene', { creatorTestPlay: this.testPlayContext });
+      } else if (this.quickPlayIndex >= 0) {
+        this.scene.start('GameScene', { quickPlayIndex: this.quickPlayIndex });
       } else {
         this.scene.start('GameScene', { sectorIndex: this.currentSectorIndex });
       }
@@ -249,6 +281,8 @@ export class GameScene extends Phaser.Scene {
       SectorTransition.fadeOut(this, 300, () => {
         if (this.testPlayContext) {
           this.testPlayContext.onEnd({ cleared: false });
+        } else if (this.quickPlayIndex >= 0) {
+          this.scene.start('LevelSelectScene');
         } else {
           this.scene.start('MenuScene');
         }
@@ -275,6 +309,8 @@ export class GameScene extends Phaser.Scene {
           SectorTransition.fadeOut(this, 800, () => {
             if (this.testPlayContext) {
               this.testPlayContext.onEnd({ cleared: true, replaySystem: this.replaySystem });
+            } else if (this.quickPlayIndex >= 0) {
+              this.scene.start('LevelSelectScene');
             } else {
               // Progression & next sector wiring
               const nextSectorIndex = this.currentSectorIndex + 1;

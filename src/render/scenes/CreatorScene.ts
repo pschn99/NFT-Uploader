@@ -31,6 +31,7 @@ import { migrateToLatest } from '../../levels/migrate';
 import { serializeLevel } from '../../levels/serialize';
 import type { LevelData } from '../../levels/LevelData';
 import type { StorageProvider } from '../../core/StorageProvider';
+import { SectorTransition } from '../transitions/SectorTransition';
 
 // ---------------------------------------------------------------------------
 // Default new level template
@@ -96,9 +97,12 @@ export class CreatorScene extends Phaser.Scene {
     // Camera scroll via arrow keys / WASD (editor navigation)
     const cursors = this.input.keyboard?.createCursorKeys();
     this.events.on('update', () => {
-      if (cursors?.up.isDown)    this.cameras.main.scrollY -= 8;
-      if (cursors?.down.isDown)  this.cameras.main.scrollY += 8;
+       if (cursors?.up.isDown)    this.cameras.main.scrollY -= 8;
+       if (cursors?.down.isDown)  this.cameras.main.scrollY += 8;
     });
+
+    // Fade in
+    SectorTransition.fadeIn(this);
   }
 
   update(): void {

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SectorTransition } from '../transitions/SectorTransition';
 
 export class MenuScene extends Phaser.Scene {
   private playKey!: Phaser.Input.Keyboard.Key;
@@ -20,7 +21,7 @@ export class MenuScene extends Phaser.Scene {
     const { width, height } = this.cameras.main;
 
     // 1. Sleek Retro Title
-    this.titleText = this.add.text(width / 2, height / 2 - 120, 'PINBALLZZZ', {
+    this.titleText = this.add.text(width / 2, height / 2 - 140, 'PINBALLZZZ', {
       fontSize: '64px',
       color: '#ffffff',
       fontFamily: 'monospace',
@@ -38,22 +39,29 @@ export class MenuScene extends Phaser.Scene {
       ease: 'Sine.easeInOut'
     });
 
-    // 2. Play Prompt
-    this.promptText = this.add.text(width / 2, height / 2 + 10, '[ PRESS SPACE TO PLAY CAMPAIGN ]', {
+    // 2. Campaign Play Prompt
+    this.promptText = this.add.text(width / 2, height / 2 - 10, '[ PRESS SPACE TO PLAY CAMPAIGN ]', {
       fontSize: '20px',
       color: '#ffffff',
       fontFamily: 'monospace'
     }).setOrigin(0.5);
 
-    // 2b. Creator Studio Prompt
-    this.creatorPromptText = this.add.text(width / 2, height / 2 + 50, '[ PRESS E FOR CREATOR STUDIO ]', {
+    // 2b. Quick Play Prompt
+    this.add.text(width / 2, height / 2 + 34, '[ PRESS Q FOR QUICK PLAY ]', {
+      fontSize: '20px',
+      color: '#ffcc00',
+      fontFamily: 'monospace'
+    }).setOrigin(0.5);
+
+    // 2c. Creator Studio Prompt
+    this.creatorPromptText = this.add.text(width / 2, height / 2 + 78, '[ PRESS E FOR CREATOR STUDIO ]', {
       fontSize: '20px',
       color: '#aaaaff',
       fontFamily: 'monospace'
     }).setOrigin(0.5);
 
     // 3. Controls Help Toggle Prompt
-    this.controlsText = this.add.text(width / 2, height / 2 + 110, 'Press "C" to view controls list', {
+    this.controlsText = this.add.text(width / 2, height / 2 + 140, 'Press "C" to view controls list', {
       fontSize: '16px',
       color: '#888888',
       fontFamily: 'monospace'
@@ -65,23 +73,37 @@ export class MenuScene extends Phaser.Scene {
       this.playKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.controlsKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.C);
       this.creatorKey = k.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+      k.addKey(Phaser.Input.Keyboard.KeyCodes.Q).on('down', () => {
+        SectorTransition.fadeOut(this, 250, () => {
+          this.scene.start('LevelSelectScene');
+        });
+      });
     }
 
-    // Pointer-click falls back to launching the game directly
+    // Pointer-click launches Quick Play level select
     this.input.on('pointerdown', () => {
-      this.scene.start('GameScene', { sectorIndex: 0 });
+      SectorTransition.fadeOut(this, 250, () => {
+        this.scene.start('LevelSelectScene');
+      });
     });
+
+    // Fade in
+    SectorTransition.fadeIn(this);
   }
 
   update() {
     // Space to transition and play campaign
     if (this.playKey && Phaser.Input.Keyboard.JustDown(this.playKey)) {
-      this.scene.start('GameScene', { sectorIndex: 0 });
+      SectorTransition.fadeOut(this, 250, () => {
+        this.scene.start('GameScene', { sectorIndex: 0 });
+      });
     }
 
     // E to transition to Creator Studio
     if (this.creatorKey && Phaser.Input.Keyboard.JustDown(this.creatorKey)) {
-      this.scene.start('CreatorScene');
+      SectorTransition.fadeOut(this, 250, () => {
+        this.scene.start('CreatorScene');
+      });
     }
 
     // C to toggle controls overlay

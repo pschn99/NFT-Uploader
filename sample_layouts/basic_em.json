@@ -1,0 +1,156 @@
+{
+  "version": 1.0,
+  "table": {
+    "name": "Basic EM",
+    "width": 1000,
+    "height": 2000
+  },
+  "physics": {
+    "gravity": 1.0,
+    "wallRestitution": 0.92,
+    "bumperForce": 7.5
+  },
+  "objects": [
+    {
+      "id": "left_flipper",
+      "type": "flipper",
+      "x": 360,
+      "y": 1815,
+      "length": 130,
+      "angle": 25
+    },
+    {
+      "id": "right_flipper",
+      "type": "flipper",
+      "x": 640,
+      "y": 1815,
+      "length": 130,
+      "angle": -25
+    },
+    {
+      "id": "sling_left",
+      "type": "slingshot",
+      "polygon": [
+        [
+          245,
+          1660
+        ],
+        [
+          365,
+          1710
+        ],
+        [
+          280,
+          1810
+        ]
+      ]
+    },
+    {
+      "id": "sling_right",
+      "type": "slingshot",
+      "polygon": [
+        [
+          755,
+          1660
+        ],
+        [
+          635,
+          1710
+        ],
+        [
+          720,
+          1810
+        ]
+      ]
+    },
+    {
+      "id": "bumper_upper",
+      "type": "bumper",
+      "x": 500,
+      "y": 340,
+      "radius": 55
+    },
+    {
+      "id": "bumper_left",
+      "type": "bumper",
+      "x": 390,
+      "y": 500,
+      "radius": 55
+    },
+    {
+      "id": "bumper_right",
+      "type": "bumper",
+      "x": 610,
+      "y": 500,
+      "radius": 55
+    },
+    {
+      "id": "spinner",
+      "type": "spinner",
+      "x": 500,
+      "y": 930,
+      "rotation": 90
+    },
+    {
+      "id": "t1",
+      "type": "target",
+      "x": 220,
+      "y": 760
+    },
+    {
+      "id": "t2",
+      "type": "target",
+      "x": 220,
+      "y": 690
+    },
+    {
+      "id": "t3",
+      "type": "target",
+      "x": 220,
+      "y": 620
+    },
+    {
+      "id": "t4",
+      "type": "target",
+      "x": 780,
+      "y": 760
+    },
+    {
+      "id": "t5",
+      "type": "target",
+      "x": 780,
+      "y": 690
+    },
+    {
+      "id": "t6",
+      "type": "target",
+      "x": 780,
+      "y": 620
+    },
+    {
+      "id": "lane_left",
+      "type": "rollover",
+      "x": 300,
+      "y": 120
+    },
+    {
+      "id": "lane_center",
+      "type": "rollover",
+      "x": 500,
+      "y": 90
+    },
+    {
+      "id": "lane_right",
+      "type": "rollover",
+      "x": 700,
+      "y": 120
+    },
+    {
+      "id": "drain",
+      "type": "drain",
+      "x": 500,
+      "y": 1975,
+      "width": 260
+    }
+  ]
+}

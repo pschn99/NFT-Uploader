@@ -218,8 +218,17 @@ export class CreatorGrid {
   // Private — input
   // ---------------------------------------------------------------------------
 
+  /** Returns true if the pointer is in the safe editable grid area (not overlapping UI). */
+  private isPointerInGrid(pointer: Phaser.Input.Pointer): boolean {
+    // HUD is top 0-40px. Palette is left 0-130px.
+    // Allow pointer to interact with grid if x > 130 and y > 40.
+    return pointer.x > 130 && pointer.y > 40;
+  }
+
   private registerInputHandlers(): void {
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (!this.isPointerInGrid(pointer)) return;
+      
       if (pointer.rightButtonDown()) {
         this.removeBlockAt(pointer);
       } else {
@@ -230,6 +239,12 @@ export class CreatorGrid {
     });
 
     this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!this.isPointerInGrid(pointer)) {
+        this.ghostGraphics.clear();
+        this.coordinateText.setVisible(false);
+        return;
+      }
+      
       if (this.isDragging && !pointer.rightButtonDown()) {
         this.placeBlockAt(pointer);
       }

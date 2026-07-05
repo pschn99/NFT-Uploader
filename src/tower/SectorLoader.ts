@@ -55,8 +55,10 @@ export class SectorLoader {
         topY = wallY + hy;
       }
 
-      // Spawn plunger deflector high above the divider top
+      // Spawn plunger deflector ramp above the divider top
       simulation.createStaticWall(data.plunger.x + 0.1, topY + 3.0, 0.7, 0.1, -0.5);
+      // Second deflector vertically above catches falling balls and bounces them left
+      simulation.createStaticWall(data.plunger.x + 0.1, topY + 6.0, 0.7, 0.1, 0.5);
     }
 
     // 5. Spawn flippers

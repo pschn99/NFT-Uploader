@@ -73,7 +73,7 @@ export class CreatorTestPlay {
 
     // Start GameScene in test-play mode (passing context as launch data)
     this.scene.scene.launch('GameScene', { [TEST_PLAY_DATA_KEY]: context });
-    this.scene.scene.pause('CreatorScene');
+    this.scene.scene.sleep('CreatorScene');
   }
 
   /**
@@ -83,7 +83,7 @@ export class CreatorTestPlay {
   restore(): void {
     this.levelSnapshot = null;
     this.scene.scene.stop('GameScene');
-    this.scene.scene.resume('CreatorScene');
+    this.scene.scene.wake('CreatorScene');
   }
 
   destroy(): void {

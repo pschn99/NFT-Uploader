@@ -8,6 +8,7 @@ import { GameScene } from './render/scenes/GameScene';
 import { BootScene } from './render/scenes/BootScene';
 import { MenuScene } from './render/scenes/MenuScene';
 import { CreatorScene } from './render/scenes/CreatorScene';
+import { LevelSelectScene } from './render/scenes/LevelSelectScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -19,7 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
     gamepad: true,
     keyboard: true
   },
-  scene: [BootScene, MenuScene, GameScene, CreatorScene, FlipperSpike, FallFloorSpike],
+  scene: [BootScene, MenuScene, LevelSelectScene, GameScene, CreatorScene, FlipperSpike, FallFloorSpike],
 };
 
 async function startApp() {

@@ -1,0 +1,25 @@
+{
+  "format_version": 3,
+  "name": "Drop Bank & Spinner",
+  "author_id": "sample",
+  "sector_height_m": 20.0,
+  "blocks": [
+    { "type": "plunger",       "grid_x": 30, "grid_y": 2 },
+    { "type": "flipper_left",  "grid_x": 11, "grid_y": 6 },
+    { "type": "flipper_right", "grid_x": 18, "grid_y": 6 },
+    { "type": "wall", "grid_x": 29, "grid_y": 9,  "params": { "hx": 0.1,  "hy": 6.0 } },
+    { "type": "wall", "grid_x": 0,  "grid_y": 16, "params": { "hx": 0.25, "hy": 10.0 } },
+    { "type": "wall", "grid_x": 32, "grid_y": 16, "params": { "hx": 0.25, "hy": 10.0 } },
+    { "type": "wall", "grid_x": 6,  "grid_y": 9,  "params": { "hx": 3.56, "hy": 0.2, "rotation": -0.45 } },
+    { "type": "wall", "grid_x": 23, "grid_y": 9,  "params": { "hx": 3.56, "hy": 0.2, "rotation":  0.45 } },
+    { "type": "bumper_standard", "grid_x": 12, "grid_y": 20, "params": { "radius": 0.55 } },
+    { "type": "bumper_standard", "grid_x": 17, "grid_y": 20, "params": { "radius": 0.55 } },
+    { "type": "wall", "grid_x": 4,  "grid_y": 14, "params": { "hx": 2.0, "hy": 0.2 } },
+    { "type": "wall", "grid_x": 7,  "grid_y": 14, "params": { "hx": 2.0, "hy": 0.2 } },
+    { "type": "wall", "grid_x": 10, "grid_y": 14, "params": { "hx": 2.0, "hy": 0.2 } },
+    { "type": "wall", "grid_x": 19, "grid_y": 14, "params": { "hx": 2.0, "hy": 0.2 } },
+    { "type": "wall", "grid_x": 22, "grid_y": 14, "params": { "hx": 2.0, "hy": 0.2 } },
+    { "type": "wall", "grid_x": 25, "grid_y": 14, "params": { "hx": 2.0, "hy": 0.2 } },
+    { "type": "exit", "grid_x": 16, "grid_y": 30 }
+  ]
+}

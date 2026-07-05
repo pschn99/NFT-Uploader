@@ -1,0 +1,50 @@
+{
+  "layout_name": "orbit_loops",
+  "description": "Standard flipper base with left and right orbit shots that loop around the outside of the bumpers and feed back down through one-way gates. Tests curved wall geometry and one-way gate physics (ball can pass one direction only).",
+  "test_focus": ["curved_walls", "one_way_gates", "alternate_ball_return_paths"],
+  "playfield": {
+    "width_units": 1.0,
+    "height_units": 1.0,
+    "shooter_lane": { "x_range": [0.90, 1.00], "y_range": [0.05, 1.00], "ball_entry_point": [0.95, 0.98] }
+  },
+  "walls": [
+    { "id": "outer_left", "points": [[0.02, 0.05], [0.02, 0.85]] },
+    { "id": "outer_right_playfield", "points": [[0.88, 0.05], [0.88, 0.85]] },
+    { "id": "top_arc", "type": "arc", "center": [0.5, 0.05], "radius": 0.46, "start_deg": 180, "end_deg": 0 },
+    { "id": "shooter_lane_divider", "points": [[0.88, 0.05], [0.88, 0.98]] },
+    { "id": "left_orbit_wall", "type": "arc", "center": [0.5, 0.10], "radius": 0.40, "start_deg": 160, "end_deg": 100 },
+    { "id": "right_orbit_wall", "type": "arc", "center": [0.5, 0.10], "radius": 0.40, "start_deg": 80, "end_deg": 20 }
+  ],
+  "flippers": [
+    { "id": "left_flipper", "pivot": [0.38, 0.90], "length": 0.14, "rest_angle_deg": 210, "active_angle_deg": 150, "side": "left" },
+    { "id": "right_flipper", "pivot": [0.62, 0.90], "length": 0.14, "rest_angle_deg": -30, "active_angle_deg": 30, "side": "right" }
+  ],
+  "slingshots": [
+    { "id": "left_slingshot", "shape": "triangle", "points": [[0.28, 0.78], [0.38, 0.78], [0.30, 0.86]], "kick_force": 1.4 },
+    { "id": "right_slingshot", "shape": "triangle", "points": [[0.62, 0.78], [0.72, 0.78], [0.70, 0.86]], "kick_force": 1.4 }
+  ],
+  "pop_bumpers": [
+    { "id": "bumper_top", "center": [0.50, 0.32], "radius": 0.035, "force": 1.6 },
+    { "id": "bumper_left", "center": [0.40, 0.42], "radius": 0.035, "force": 1.6 },
+    { "id": "bumper_right", "center": [0.60, 0.42], "radius": 0.035, "force": 1.6 }
+  ],
+  "gates": [
+    { "id": "left_orbit_gate", "position": [[0.16, 0.55], [0.20, 0.50]], "allowed_direction": "upward_only" },
+    { "id": "right_orbit_gate", "position": [[0.80, 0.55], [0.84, 0.50]], "allowed_direction": "upward_only" }
+  ],
+  "lanes": [
+    { "id": "left_orbit_entry", "type": "orbit", "path": [[0.10, 0.75], [0.10, 0.20], [0.35, 0.06]], "exits_to": "top_arc" },
+    { "id": "right_orbit_entry", "type": "orbit", "path": [[0.80, 0.75], [0.80, 0.20], [0.65, 0.06]], "exits_to": "top_arc" },
+    { "id": "left_outlane", "type": "outlane", "path": [[0.05, 0.60], [0.12, 0.90]], "drains_ball": true },
+    { "id": "left_inlane", "type": "inlane", "path": [[0.20, 0.62], [0.30, 0.86]], "feeds_flipper": "left_flipper" },
+    { "id": "right_inlane", "type": "inlane", "path": [[0.80, 0.62], [0.70, 0.86]], "feeds_flipper": "right_flipper" },
+    { "id": "right_outlane", "type": "outlane", "path": [[0.95, 0.60], [0.88, 0.90]], "drains_ball": true }
+  ],
+  "rollovers": [
+    { "id": "orbit_rollover_left", "position": [0.10, 0.70] },
+    { "id": "orbit_rollover_right", "position": [0.80, 0.70] }
+  ],
+  "drain": { "x_range": [0.38, 0.62], "y": 0.98 },
+  "ball": { "radius": 0.012, "start_position": [0.95, 0.98] },
+  "scoring_defaults": { "orbit_shot": 1000, "pop_bumper_hit": 100, "slingshot_hit": 50, "rollover": 250 }
+}

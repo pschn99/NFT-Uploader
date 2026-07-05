@@ -323,10 +323,11 @@ export class Simulation {
         if (this.anchor.isAttached()) {
           this.anchor.release();
         }
-        // Reset ball at checkpoint Y + 2m (dropping down safely)
-        this.ball.reset(10.24, this.playerState.lastCheckpointY + 2.0);
-        this.eventBus.emit('BallFell', { fromY: fallenY });
-      }
+         // Reset ball at checkpoint Y + 6m (dropping down safely above flippers)
+         this.ball.reset(10.24, this.playerState.lastCheckpointY + 6.0);
+         this.playerState.maxHeight = this.playerState.lastCheckpointY;
+         this.eventBus.emit('BallFell', { fromY: fallenY });
+       }
     }
   }
 
