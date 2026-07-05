@@ -7,8 +7,8 @@ Translates [GDD_Godot.md](file:///Users/ps/Dev/NFT-Uploader/GDD_Godot.md) and [T
 ## Strategic Decision
 
 * **Engine:** Godot Engine 4.x utilizing **GDScript** and native **2D Physics**.
-* **Scope Boundary:** Focused entirely on a single-player offline campaign (Sectors 0-5) and an endless procedural Abyss mode.
-* **Excluded:** The User Generated Content (UGC) Creator Studio editor, local/server JSON serialization and validations, replay regression frameworks, and online Steam Workshop integrations are **completely removed** to prioritize gameplay feel and layout precision.
+* **Scope Boundary:** Focused entirely on a single-table arcade pinball game with persistent local high scores.
+* **Excluded:** Vertical climbing mechanics, camera vertical scrolling, checkpoints, anchors, fall floors, procedural Abyss modes, dynamic chunk managers, and multi-track adaptive sound mixes are **completely removed** to prioritize a classic, highly-polished single-table pinball experience.
 
 ---
 
@@ -28,187 +28,136 @@ Translates [GDD_Godot.md](file:///Users/ps/Dev/NFT-Uploader/GDD_Godot.md) and [T
 
 ```
 M0 (Project Setup & Spikes)
- └─▶ M1 (Core Sandbox & Physics feel)
-      └─▶ M2 (Gameplay Mechanics & Hazards)
-           └─▶ M3 (Campaign Sectors & Adaptive Audio)
-                └─▶ M4 (Polish, Saves & Native Export) ──▶ SHIP!
+ └─▶ M1 (Core Physics & UI Sandbox)
+      └─▶ M2 (Table Elements & Game Loop)
+           └─▶ M3 (Playtesting, Tuning & Export) ──▶ SHIP!
 ```
 
 ---
 
 ## Milestone 0 — Project Setup & Spikes
 
-**Goal:** Establish directories, input mappings, and verify flipper rotation mechanics and coordinate-to-metric scales.
+**Goal:** Establish directories, configure physics settings, and verify programmatic flipper and plunger mechanics.
 
-**Estimate:** ~4 days
+**Estimate:** ~3.5 days
 
-### 0.1 Project Directory Scaffolding
+### 0.1 Project Initialization & Settings
 - `[ ]` **[NEW]** Initialize Godot 4 project directory with standard folder structure:
-  * `scenes/` (UI, Ball, Flipper, Anchor, Bumpers, Sectors)
-  * `scripts/` (Autoloads, entity logic, manager scripts)
+  * `scenes/` (HUD, Ball, Flipper, Bumper, Table)
+  * `scripts/` (Autoloads, entity script controllers)
   * `assets/` (Sprites, sounds, fonts)
-  * `autoload/` (CampaignManager, AudioSystem, SettingsSystem)
-- `[ ]` **[NEW]** Setup project input mappings in project settings for keyboard and gamepad inputs. **(S, 0.5d)**
+- `[ ]` **[NEW]** Setup project input mappings in project settings for keyboard and gamepad inputs.
+- `[ ]` **[NEW]** Configure explicit physics parameters in `project.godot`:
+  * `physics/common/physics_ticks_per_second = 240`
+  * `physics/common/max_physics_steps_per_frame = 8`
+  * `physics/2d/run_on_separate_thread = true` **(S, 0.5d)**
 
-### 0.2 Flipper Physics Feel Spike (TDD §4.1)
-- `[ ]` **[NEW]** Create a temporary sandbox scene `scenes/flipper_spike.tscn` to test flipper kinematics:
-  * Verify `RigidBody2D` input response times.
-  * Implement sleeping prevention by disabling `can_sleep` or calling `sleeping = false` on input triggers.
-  * Verify physical static collider stop limits vs software clamp limits.
-  * Measure solenoid velocity acceleration (45.0 rad/s target) and spring return torque feel. **(M, 1.5d)**
+### 0.2 Flipper Kinematics Spike (TDD §4.1)
+- `[ ]` **[NEW]** Create a sandbox scene `scenes/flipper_spike.tscn` to test flipper feel:
+  * Implement `AnimatableBody2D` programmatically driven inside `_physics_process`.
+  * Validate limits clamping and verify realistic collision bounce impulses transferred to dynamic test bodies.
+  * Measure solenoid velocity acceleration feel (constant rotation speed target). **(M, 1.5d)**
 
-### 0.3 Coordinate System & Scaling Spike (TDD §2)
-- `[ ]` **[NEW]** Define standard coordinate scalar constant `PIXELS_PER_METER = 100` in a global script.
-  * Verify that a 18.25-meter wide play area spans 1825 viewport pixels correctly.
-  * Map layout baseline constants (pivots, slope offsets) into the editor grid settings. **(S, 0.5d)**
+### 0.3 Plunger Spring Curve Spike (TDD §4.3)
+- `[ ]` **[NEW]** Create a sandbox scene `scenes/plunger_spike.tscn` to test plunger spring compression:
+  * Implement a hold-duration charge timer.
+  * Calculate release velocity using a quadratic spring compression curve.
+  * Apply launch impulses vertically upward to check ball launch consistency. **(S, 1.0d)**
 
-### 0.4 Audio Stream Setup Spike
-- `[ ]` **[NEW]** Build a basic sound player prototype testing dynamic volume modifications to verify latency-free crossfading. **(S, 0.5d)**
+### 0.4 Simple Audio setup
+- `[ ]` **[NEW]** Test low-latency retro sound player nodes playing on impact signals. **(S, 0.5d)**
 
 ### Exit Criteria
-- Godot project runs, and imports basic prototype assets.
-- Flipper feel spike signed off with immediate physical response.
-- Layout constants aligned to editor grid scales.
+- Godot project runs, and imports basic sprites/sounds.
+- Flipper and plunger sandbox mechanics verify satisfying kinetic impulses.
 
 ---
 
-## Milestone 1 — Core Physics Sandbox
+## Milestone 1 — Core Physics & UI Sandbox
 
-**Goal:** Implement dynamic ball physics, basic controls, camera tracking, and a minimal sector run.
+**Goal:** Implement the dynamic ball, flippers with input buffering, plunger launch curve, static camera shake, and basic score HUD overlay.
 
 **Estimate:** ~5 days
 
-### 1.1 Ball Scene & CCD
+### 1.1 Dynamic Ball Setup
 - `[ ]` **[NEW]** Setup `Ball.tscn`:
-  * Dynamic `RigidBody2D` configuration with custom `PhysicsMaterial` (high bounciness, low friction).
-  * Enable Continuous Collision Detection (CCD) to cast shapes or rays.
-  * Create a custom Line2D visual trail drawing node tracking the past 8 global coordinate coordinates. **(M, 1.5d)**
+  * Dynamic `RigidBody2D` with custom `PhysicsMaterial` (high bounciness, low friction).
+  * Enable Continuous Collision Detection (CCD - ray/shape casting).
+  * Add a simple `Line2D` visual trail tracking ball coordinates over the past 16 frames for visual smoothness at high speeds. **(M, 1.5d)**
 
-### 1.2 Camera Controller
-- `[ ]` **[NEW]** Implement `CameraController2D.gd`:
-  * Limit horizontal camera scrolling.
-  * Follow the ball vertically with dead-zone boundaries and smooth vertical dampening.
-  * Handle screen-shake impulse logic triggered via signals. **(S, 1.0d)**
+### 1.2 Buffered Flippers
+- `[ ]` **[NEW]** Setup `Flipper.tscn` using `AnimatableBody2D`:
+  * Programmatic rotation limits clamping in `_physics_process`.
+  * Implement the flipper anti-ghosting input latching buffer in GDScript (capturing sub-tick presses in `_unhandled_input` and enforcing a 5-physics-tick minimum swing duration). **(M, 1.5d)**
 
-### 1.3 Controls Bridge
-- `[ ]` **[NEW]** Implement user inputs mapping to flippers and plunger pulls in `_unhandled_input` loops. **(S, 0.5d)**
+### 1.3 Plunger Launcher
+- `[ ]` **[NEW]** Implement plunger Area2D lane launcher mapping hold time to launch velocities. **(S, 0.5d)**
 
-### 1.4 Sector 0 Setup
-- `[ ]` **[NEW]** Create `scenes/sectors/Sector0.tscn` representing a 50m tutorial layout.
-  * Place static boundary walls, symmetrical flippers, and a plunger channel.
-  * Verify ball release, shooting, and paddle striking flows. **(M, 1.5d)**
+### 1.4 Active Score HUD
+- `[ ]` **[NEW]** Build CanvasLayer HUD overlay showing current points score, multiplier banners, and remaining balls remaining tracker (starts at 3). **(S, 1.0d)**
+
+### 1.5 Camera Setup & Trauma Shake
+- `[ ]` **[NEW]** Configure static `Camera2D` viewport properties (fixed position center, smoothing disabled, drag margins at 0) and implement trauma-based offset camera shake logic inside `GameSession` triggered by impact and nudge signals. **(S, 0.5d)**
 
 ### Exit Criteria
-- Playable 50m sandbox scene where the ball can be launched, flipped, and tracked by the camera without physics tunneling.
+- A playable canvas where the player can launch a ball, strike it with buffered flippers, and see points and remaining ball indicators update on the HUD.
 
 ---
 
-## Milestone 2 — Gameplay Mechanics & Hazards
+## Milestone 2 — Table Elements & Game Loop
 
-**Goal:** Implement recovery tools, checkpoints, bumpers, and regression safety boundaries.
-
-**Estimate:** ~7 days
-
-### 2.1 Bumper & Plunger Channels
-- `[ ]` **[NEW]** Create standard `Bumper.tscn` (Area2D/StaticBody2D):
-  * Trigger immediate rebound velocities when the ball overlaps the boundary.
-  * Play visual expansion scaling animations and sound effects.
-- `[ ]` **[NEW]** Wire plunger channel release velocities based on holding release duration. **(S, 1.0d)**
-
-### 2.2 Nudge System
-- `[ ]` **[NEW]** Create `NudgeSystem.gd`:
-  * Track 3 nudge charges (refilled on checkpoints).
-  * Apply immediate horizontal impulse force vectors to the ball: `ball.apply_central_impulse(...)`.
-  * Emit screen-shake signals to the camera. **(S, 1.0d)**
-
-### 2.3 Anchor Recovery System
-- `[ ]` **[NEW]** Create `Anchor.tscn` (Area2D wall catches):
-  * Monitor ball overlaps.
-  * Catch the ball by setting it to kinematic freeze state for `0.4` seconds.
-  * Track charges (max 3 catches per anchor, limit of 2 active anchors in level).
-  * Release ball to dynamic state after time limits expire. **(M, 2.0d)**
-
-### 2.4 Fall Floor & Checkpoint Boundaries
-- `[ ]` **[NEW]** Create `Checkpoint.tscn` Area2D sensors:
-  * Triggered every 100m.
-  * Save active checkpoint altitude coordinate and refill nudge/anchor charges.
-- `[ ]` **[NEW]** Create `FallFloor.tscn` (StaticBody2D with `one_way_collision = true`):
-  * Positioned 10m below newly crossed checkpoints.
-  * When the ball descends below the checkpoint altitude, activate the floor's collision shape for exactly `2.0` seconds before disabling collision layer masks. **(M, 2.0d)**
-
-### 2.5 Respawn Orchestration
-- `[ ]` **[MODIFY]** Update `GameSession.gd` to monitor ball coordinate falls:
-  * When the ball drains below the active sector boundary, pause the game for `0.8` seconds, reset ball velocity vectors, and respawn the ball at the last active checkpoint altitude. **(S, 0.5d)**
-
-### Exit Criteria
-- Playable sandbox demonstrating bumpers, anchor catches, nudge controls, checkpoint height saving, and fall floor captures.
-
----
-
-## Milestone 3 — Campaign Sectors & Adaptive Audio
-
-**Goal:** Implement Campaign Sectors 0-5, endless procedural Abyss mode, and adaptive sound systems.
-
-**Estimate:** ~9 days
-
-### 3.1 authored Sectors (0 to 5)
-- `[ ]` **[NEW]** Design and build Godot scenes for all 6 campaign sectors:
-  * `Sector0_Lobby.tscn` (Tutorial, basic bumpers/plungers)
-  * `Sector1_Shaft.tscn` (Narrow spaces, wall-bounce segments)
-  * `Sector2_BumperGarden.tscn` ( bumper chain reactions)
-  * `Sector3_PlungerVault.tscn` (Gravity boosters, plunger channels)
-  * `Sector4_NegativeSpace.tscn` (Invisible blocks, high-contrast layouts)
-  * `Sector5_Storm.tscn` (High velocity, dynamic wind vectors)
-- `[ ]` **[NEW]** Implement sector transition triggers (Area2D boundary at 500m height) with screen invert animations and sector card labels. **(L, 5.0d)**
-
-### 3.2 Sector Chunk Manager
-- `[ ]` **[NEW]** Build `SectorChunkManager.gd`:
-  * Monitor Camera2D position.
-  * Load and unload geometry scenes dynamically in a 250m window (using height checks to account for tall boundaries).
-  * Ensure active physics bodies do not exceed 50 count. **(M, 1.5d)**
-
-### 3.3 Procedural Abyss (Sector ∞)
-- `[ ]` **[NEW]** Build `AbyssGenerator.gd`:
-  * Initialize seeded random logic `RandomNumberGenerator`.
-  * Procedurally instantiate random block scene chunks every 100m.
-  * Automatically unload old chunks trailing below the camera. **(M, 1.5d)**
-
-### 3.4 Adaptive Music System
-- `[ ]` **[NEW]** Setup Autoload `AudioSystem.gd`:
-  * Loop multi-channel audio tracks in sync.
-  * Alter volume profiles based on altitude levels.
-  * Instantly mute melody stems (leaving base basslines) on ball fall signals, fading them back on flipper strike signals. **(S, 1.0d)**
-
-### Exit Criteria
-- Complete vertical climb flow from Sector 0 to Sector 5.
-- Abyss mode activates after clearing Sector 5.
-- Music stems react dynamically to elevation and ball drops.
-
----
-
-## Milestone 4 — Polish, Saves, & Native Export
-
-**Goal:** Progression unlocks, settings configs, and building native executables.
+**Goal:** Complete the table layout, bumpers, slingshots, ramps, nudge/tilt mechanics, save configurations, game state transitions, and audio.
 
 **Estimate:** ~5 days
 
-### 4.1 HUD & UI Menus
-- `[ ]` **[NEW]** Build Main Menu (Start, Settings, Exit) and active HUD scene (Height readout, Nudge/Anchor charge meters, Skin customizer). **(M, 1.5d)**
+### 2.1 Table Construction
+- `[ ]` **[NEW]** Design and lay out static borders and ramps in `Table.tscn`:
+  * Place static outer walls, plunger lane separators, and flipper pivots.
+  * Map collision layers (Ball on Layer 1, Walls on Layer 2, Flippers on Layer 3). **(M, 1.5d)**
 
-### 4.2 Save & Settings System
-- `[ ]` **[NEW]** Build `SettingsSystem.gd` & `CampaignManager.gd` Autoloads:
-  * Write user preferences (keys, sound volumes) to `user://settings.cfg`.
-  * Track campaign progress and high scores to `user://save_data.cfg`. **(M, 1.5d)**
+### 2.2 Bumpers, Slingshots & Drain
+- `[ ]` **[NEW]** Setup `Bumper.tscn` and Slingshots:
+  * Program rebound impulses on ball collisions.
+  * Emit score signals to the HUD.
+- `[ ]` **[NEW]** Implement the `DrainArea` Area2D sensor:
+  * Detect ball entry, deduct one ball count, reset the ball at the plunger, and trigger Game Over events when ball count reaches 0. **(M, 1.5d)**
 
-### 4.3 Customization & Polish
-- `[ ]` **[NEW]** Add ball customization unlocks (skins, trail variants) triggered on campaign progression clears. **(S, 1.0d)**
+### 2.3 Nudge & Tilt System
+- `[ ]` **[NEW]** Implement lateral table nudging:
+  * Apply direct horizontal impulse force to the ball rigid body.
+  * Add nudge count tracking and decay rates.
+  * If nudge count exceeds maximum limit, trigger the **TILT** state (temporarily disable flipper inputs, play screen alert). **(S, 0.5d)**
 
-### 4.4 Build Export & Verification
-- `[ ]` **[NEW]** Setup Godot desktop export presets for Windows, macOS, and Linux.
-  * Trigger native compilation scripts.
-  * Complete a full local run to verify stability. **(S, 1.0d)**
+### 2.4 Scores Saving & Sound
+- `[ ]` **[NEW]** Setup `ScoreManager.gd` Autoload to save/load the top 5 local high scores using `ConfigFile` (`user://leaderboard.cfg`) with version prefix checking.
+- `[ ]` **[NEW]** Build `SoundController.gd` Autoload playing back chiptune loops and bounce SFX triggered by signals. **(S, 1.0d)**
+
+### 2.5 Game State Machine
+- `[ ]` **[NEW]** Implement the core `GameState` enum machine inside `GameSession` (transitions for MENU, PLAYING, TILT, DRAINED, and GAME_OVER states), controlling flipper/plunger active input windows and HUD visual state updates. **(S, 0.5d)**
 
 ### Exit Criteria
-- Finished native executable builds for targeted operating systems.
-- Offline save progression and key configuration persistent across game boots.
-- Smooth execution without memory or body leaks.
+- Complete pinball table cycle from launch, playing bumpers/slingshots/ramps, score accumulation, nudging, tilt disables, ball drains, and game over loops.
+
+---
+
+## Milestone 3 — Playtesting, Tuning & Native Export
+
+**Goal:** Tune physics parameters, balance scoring structures, and export native target builds.
+
+**Estimate:** ~3.5 days
+
+### 3.1 Empirical Tuning & Calibration
+- `[ ]` **[MODIFY]** Conduct focused playtesting sessions to calibrate physical parameters:
+  * Tune ball gravity, plunger maximum launch velocity, flipper rotation velocity, slingshot bounce impulse, and bumper rebound forces to maximize kinetic fun.
+  * Balance score points mapping (e.g. ramp completions vs bumper hits).
+  * Fine-tune nudge impulses and tilt thresholds to make recovery rewarding but risky. **(M, 1.5d)**
+
+### 3.2 Leaderboard Submission UI & Menus
+- `[ ]` **[NEW]** Build a simple Start Menu with High Scores listing and an Initials Input screen (e.g. "AAA") on earning a leaderboard record. **(S, 1.0d)**
+
+### 3.3 Platform Exports
+- `[ ]` **[NEW]** Configure Godot export templates for Windows, macOS, and Linux targets. Compile standalone executables. **(S, 1.0d)**
+
+### Exit Criteria
+- Fully balanced, playable, standalone pinball game exported as a native executable.
+- Local leaderboard saves names and scores persistent across application restarts.

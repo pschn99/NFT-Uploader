@@ -1,16 +1,16 @@
 # PINBALLZZZ — Game Design Document (Godot 4.x)
 
-**Game Design Document v3.0**
+**Game Design Document v4.0**
 
-**Status:** Ready for production — Focused Godot 4 campaign target defined
+**Status:** Ready for production — Simplified single-table arcade pinball target locked
 **Last updated:** 2026-07-05
 
 | Category | Decision |
 | --- | --- |
-| **Genre** | Physics precision platformer / vertical pinball |
+| **Genre** | Arcade Pinball Simulation |
 | **Target Platform** | PC, Mac, Linux — native Godot desktop export |
-| **High Concept** | *Downwell* aesthetics meet *Jump King* climbing in a stark, high-stakes physics gauntlet. |
-| **Elevator Pitch** | Climb a towering, minimalist black-and-white vertical pinball machine. Every clean strike sends you higher; every miss can send you tumbling back down. Master the physics, manage your recovery tools, and conquer brutal authored sector challenges. |
+| **High Concept** | Stark, fast-paced 1-bit arcade pinball with high-contrast vector design and satisfying kinetic physics. |
+| **Elevator Pitch** | Test your reflexes on a single, highly-polished 1-bit arcade pinball table. Launch the ball, hit high-velocity bumpers, slide up ramps, and track your high score local leaderboard. Keep the ball in play—letting it drain costs you one of your 3 balls. |
 
 ---
 
@@ -18,76 +18,96 @@
 
 | Pillar | Meaning | Design Test |
 | --- | --- | --- |
-| **High-Stakes Physics** | Progress is earned through timing, control, and calculated risk. | A missed shot costs height, but the player understands why and learns. |
-| **Kinetic Satisfaction** | Ball strikes feel immediate and powerful. | Flipper impact, sound response, and screen-shake feel satisfying in isolation. |
-| **1-Bit Readability** | High speed, high clarity. | The stark black-and-white graphics allow instant identification of hazards, targets, and safe zones. |
-| **Meaningful Recovery** | Falling is not instantly terminal; it is tactical. | Drops expose alternate catches, anchor opportunities, or Fall Floor saves. |
+| **Kinetic Physics Feel** | Ball speed, gravity, and paddle strikes must feel natural and satisfying. | Ball bounces off bumpers with crisp kinetic force, and flippers hit the ball with immediate mechanical feedback. |
+| **1-Bit Readability** | Visual simplicity allows immediate state reading. | Clean white geometries on a solid black background make the ball, bumpers, and active lanes instantly recognizable. |
+| **Score Chasing** | The primary progression loop is earning points. | Every target, bumper hit, and ramp loop increments score counters, driving the player to beat their personal local bests. |
 
 ---
 
-## 2. Target Audience
+## 2. Core Game Loop
 
-* **Primary Players:** Lovers of high-difficulty physics and precision games (e.g., *Jump King*, *Downwell*, *Getting Over It*, *Celeste*).
-* **Competitive Speedrunners:** Players seeking to optimize climb routes, exploit layout geometry, and establish personal best completion times.
+```
+[Main Menu] ──▶ [Launch Ball (1 of 3)] ──▶ [Active Play: Bumpers / Ramps / Scoring]
+      ▲                                                   │
+      │                                                   ▼
+[Game Over Screen] ◀── [Check High Score] ◀── [Ball Drains (Losing a Ball)]
+```
 
----
-
-## 3. Scope Strategy (Focused Campaign)
-
-To establish excellent game feel, this version strips out all User Generated Content (UGC) editors and online Workshop platforms to focus purely on campaign level progression, polished physics feel, and local high-score validation.
-
-| Feature | Campaign Scope | Status | Notes |
-| --- | --- | --- | --- |
-| Refined Flipper & Ball feel | P0 | Active | High-fidelity Godot 2D physics integration. |
-| Campaign Tower (Sectors 0–5) | P0 | Active | Hand-authored, thematic vertical layouts. |
-| Procedural Endless Mode (Abyss) | P0 | Active | Seeded endless climb after campaign clear. |
-| Anchor Recovery System | P0 | Active | Magnetic checkpoints positioned on walls. |
-| Nudge & Fall Floor Systems | P0 | Active | Micro-corrections and regression safety nets. |
-| Local Progress & Settings | P0 | Active | Progression unlocking skins/trails + custom controls. |
-| Creator Studio & UGC Web Sharing | **OUT** | Removed | Removed to focus purely on core campaign experience. |
-| Server Validation & Replays | **OUT** | Removed | Simplified; no online anti-cheat / sharing server. |
+1. **Launch:** Pull back the mechanical plunger to shoot the ball into the table.
+2. **Active Play:** Use the left and right flippers to hit bumpers, trigger slingshots, complete lane sequences, and loop ramps to accumulate score points.
+3. **Save/Nudge:** Nudge the table laterally if the ball gets too close to the drain pocket, risking a Tilt penalty if nudged too aggressively.
+4. **Drain:** Let the ball fall past the baseline flippers into the drain. This costs 1 ball.
+5. **Game Over:** After losing all 3 balls, if the final score exceeds any high score on the local leaderboard, the player can enter their initials to save their record.
 
 ---
 
-## 4. Visual Direction: 1-Bit Arcade
+## 3. The Table Layout
 
-The visual style is strictly black and white. It relies on stark contrast, geometry, and motion rather than color.
+The game features a single, carefully tuned pinball table layout divided into distinct vertical zones:
 
-* **Background:** Deep solid black (`#000000`).
-* **Geometry/Walls:** Solid white outlines (`#FFFFFF`) with minimal vector stylings.
-* **The Ball:** Solid white sphere, emitting a trailing stream of particles/pixels to convey velocity vectors and trajectory arcs.
-* **Bumpers & Interactables:** Differentiated via simple animated geometric patterns (e.g., crosshatching, checkerboard tiles, concentric circles).
-* **Readability:** Absolute lack of visual clutter ensures that the player's eye is always tracked to the ball's trajectory and active hazards.
+* **Plunger Lane:** The launcher channel on the far right of the table where the ball sits at start-of-play. A one-way gate prevents the ball from returning to this lane once it enters the main table.
+* **Baseline Flippers:** Symmetrical left and right flipper paddles positioned at the bottom center to guard the drain opening.
+* **Slingshots:** Triangles positioned directly above the flippers that kick the ball away with lateral velocity when struck.
+* **Bumper Field:** A dense cluster of round active bumpers in the upper half of the table, causing rapid chain-reaction rebounds when hit.
+* **Lanes & Ramps:** Guided steel loops at the top of the table. Successfully guiding the ball up a ramp returns it safely to the inlanes and grants high score multipliers.
+* **Drain Pocket:** The failure boundary below the flippers. Falling here resets the ball at the plunger and decrements the active ball count.
 
----
+### 3.1 Layout and Symmetry Constants
 
-## 5. Level Layout & Symmetry Constants
+To make coordinate calculations and vector math straightforward, the table layout is designed using round numbers mapped under the `100 pixels = 1 meter` scale:
 
-To ensure standard ball interactions and clean spacing, all campaign sectors adhere to the following spatial constants:
-
-* **Play Area Width:** `18.25` meters (excluding the `2.23`m plunger lane on the far right).
-* **Play Area Center line:** Exactly **`9.125`m**.
+* **Total Table Dimensions:** `20.0m` width by `30.0m` height = `2000` × `3000` pixels (composed of a `18.0m` play area width, a `2.0m` plunger lane width on the far right, and a unified table height).
+* **Play Area Center line:** Exactly `9.0m` = `900` pixels.
 * **Flipper Pivots:** Symmetrical placement flanking the center line:
-  * **Left Flipper Pivot:** `x = 6.925`m
-  * **Right Flipper Pivot:** `x = 11.325`m
-  * **Paddles:** `1.6`m total length each, leaving a clean `1.2`m gap.
-* **Funnel Slopes:** Must align flush to the flipper pivots to guide the ball smoothly onto the paddles without pockets:
-  * **Left Slope Center:** `x = 3.56`m, half-width `hx = 3.56`m (spanning `0.0`m to `7.12`m).
-  * **Right Slope Center:** `x = 14.69`m, half-width `hx = 3.56`m (spanning `11.12`m to `18.25`m).
-  * **Vertical Offset:** Slope centers must be set exactly `1.7`m higher than the flipper pivot baseline (e.g., if Flipper Y is `3.8`m, Slope Y is `5.5`m) to create a smooth step-down of `21`cm.
+  * **Left Flipper Pivot:** `x = 6.8m` = `680` pixels.
+  * **Right Flipper Pivot:** `x = 11.2m` = `1120` pixels.
+  * **Flipper length:** `1.6m` = `160` pixels each.
+  * **Flipper Gap:** Exactly `1.2m` = `120` pixels (leaves space between paddle tips at rest).
+* **Funnel Slopes:** Positioned flush to the flipper pivots to prevent ball traps:
+  * **Left Slope:** Spans `x = 0.0m` to `6.8m` (pixels `0` to `680`). Center: `3.4m` (`340` px), half-width `3.4m` (`340` px).
+  * **Right Slope:** Spans `x = 11.2m` to `18.0m` (pixels `1120` to `1800`). Center: `14.6m` (`1460` px), half-width `3.4m` (`340` px).
+  * **Vertical Offset:** Slope centers are set exactly `1.5m` (`150` pixels) higher than the flipper pivot baseline (e.g., if Flipper Y is `800` px, Slope Y is `650` px).
 
 ---
 
-## 6. Physics & Controls
+## 4. Physics & Mechanics
 
 ### Feel Targets
 
-* **The Ball:** Feels heavy, responsive, and subject to high gravity variables in upper sectors. Uses continuous collision detection (CCD) to prevent high-velocity tunneling.
-* **Flippers:** Immediate, mechanical response mimicking solenoid actuators. Swing acceleration must feel distinct from stationary spring holding.
-* **Nudge:** Lateral micro-corrections (max 3 charges refilled upon checkpoints) to save a ball from an awkward drop.
-* **Anchor System:** The player can place up to 2 magnetic catch-points on the walls of the sector. When the ball crosses a placed Anchor, it is held kinematically for `0.4` seconds, giving the player a brief window to line up a shot. Each anchor can catch the ball up to 3 times before losing charge.
+* **The Ball:** Dynamic sphere responsive to gravity and bumper impulse triggers. Uses Continuous Collision Detection (CCD) to prevent high-velocity tunneling through flippers.
+* **Flippers:** Crisp, solenoid-like activation. Swing acceleration must feel heavy and mechanical, with programmatic stops ensuring zero sagging.
+* **Plunger:** A spring-loaded launcher. Holding the plunger key retracts the spring. Releasing applies a vertical force scaling non-linearly with compression time, allowing the player to target specific entry lanes.
+* **Nudge & Tilt:** The player can nudge the table left or right. This applies a micro-impulse force to the ball to alter its trajectory. However, each nudge increments a hidden Tilt counter. Exceeding the threshold of 3 nudges triggers a **TILT** state, which immediately disables the flippers (causing them to drop down limply) for 2 seconds (or until the ball drains), displays a flashing 'TILT' warning on the HUD, and negates any scoring. The tilt counter decays dynamically during clean play (1 charge per 4 seconds of play without nudges).
 
-### Controls (Godot Input Actions)
+---
+
+## 5. Scoring Balance Settings
+
+Points are awarded dynamically for striking targets or completing lanes:
+
+| Action / Target | Points | Description |
+| --- | --- | --- |
+| **Bumper Hit** | 100 | Active round bumpers in the upper field. |
+| **Slingshot Hit** | 50 | Triangle kickers positioned directly above the flippers. |
+| **Ramp Completed** | 500 | Guiding the ball up the steel loop guide ramps. Completing a ramp also increments the active score multiplier by 1x (e.g., 1x -> 2x) for subsequent hits until the ball drains. |
+| **Rollover Lane** | 200 | Directing the ball down the top lane channels. |
+| **Ball Saved (Nudge)** | 25 | Applying a successful nudge impulse when the ball is within the drain zone. |
+| **TILT Penalty** | 0 | Negates all points scored during an active tilted state. |
+
+---
+
+## 6. Visual Direction: 1-Bit Arcade
+
+* **Background:** Solid black (`#000000`).
+* **Geometry & Walls:** Stark, clean white outlines (`#FFFFFF`) with uniform thicknesses.
+* **Ball Trail:** Visual trail recording position vector histories (16 frames length for visual smoothness) to convey trajectory and speed.
+* **HUD Overlay:** Renders active Score, Balls Remaining (3/2/1), and a High Score banner at the top of the viewport in a clean retro pixel-art font.
+
+---
+
+## 7. Controls
+
+### 7.1 Gameplay Mapping
 
 | Action | Keyboard | Gamepad |
 |---|---|---|
@@ -96,34 +116,19 @@ To ensure standard ball interactions and clean spacing, all campaign sectors adh
 | Plunger (hold/release) | `Space` | `Left Stick` (pull down + release) |
 | Nudge Left | `A` | `D-Pad Left` |
 | Nudge Right | `D` | `D-Pad Right` |
-| Place Anchor | `S` / `Down Arrow` | `D-Pad Down` |
 | Pause / Menu | `Esc` | `Start` |
 
----
+### 7.2 Initials Entry Mapping (High Score Screen)
 
-## 7. Campaign Structure: Abstract Sectors
-
-The campaign consists of a vertical climb through 6 distinct themed sectors. Each sector is `500`m tall (except Sector 3 pacing beat) and introduces specific physical hurdles.
-
-| Sector | Name | Theme / Mechanic | Aesthetic Hook |
-|--------|------|------------------|----------------|
-| **0** | **The Lobby** | Tutorial — flippers, plunger, nudge | Clean white geometry, standard gravity |
-| **1** | **The Shaft** | Narrow corridors, tight flipper angles | Vertical stripes, rapid bouncing |
-| **2** | **The Bumper Garden** | Dense bumper fields, chain reactions | Checkerboard tiles, chaotic ricochets |
-| **3** | **The Plunger Vault** | Plunger channels, gravity boosters, launchers | Industrial lines, mechanical valves |
-| **4** | **The Negative Space** | Silhouette-only paths, hidden geometry | Inverse stippling, invisible walls |
-| **5** | **The Storm** | High speed, oscillating gravity | Wind vectors, flashing scanlines |
-| **∞** | **The Abyss** | Seeded procedural endless climb | Glitch/noise visual corruption filter |
-
-* **Checkpoints:** Triggered every `100`m. If the ball drains (falls below the active level boundary), it is respawned at the last checkpoint.
-* **Fall Floors:** A safety barrier spawned `10`m below a newly crossed checkpoint. It remains solid for 2 seconds when the ball drops down, offering a one-time safety net before a full reset.
-* **Transition:** Reaching the top boundary of a sector triggers a visual 1-bit screen flash (white/black inversion) and displays the next sector's title card without stopping ball momentum.
+| Action | Keyboard | Gamepad |
+|---|---|---|
+| Cycle Character (A-Z) | `Up Arrow` / `Down Arrow` | `D-Pad Up` / `D-Pad Down` |
+| Move Character Cursor | `Left Arrow` / `Right Arrow` | `D-Pad Left` / `D-Pad Right` |
+| Confirm Selection | `Space` / `Enter` | `Button Bottom` (A/Cross) |
 
 ---
 
-## 8. Progression & Customization
+## 8. Progression & Storage
 
-Local achievements and sector clears unlock aesthetic variations:
-* **Ball Skins:** Hollow ring, checkered sphere, noise glitch, pixel grid.
-* **Trails:** Halftone dots, binary trail, scanline grid, static noise particles.
-* **Data Storage:** Progress is saved locally on disk, ensuring offline persistence of best times, unlocked skins, and control configurations.
+* **High Scores:** Tracks and saves local top 5 high scores (Score, Date, Initials).
+* **Save Location:** Persistent ConfigFile written directly to disk.
