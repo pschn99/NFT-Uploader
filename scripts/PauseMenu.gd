@@ -15,6 +15,9 @@ signal exit_pressed()
 @onready var left_flip_btn: Button = $SettingsPanel/LeftFlipperRebind/Button
 @onready var right_flip_btn: Button = $SettingsPanel/RightFlipperRebind/Button
 @onready var plunger_btn: Button = $SettingsPanel/PlungerRebind/Button
+@onready var nudge_l_btn: Button = $SettingsPanel/NudgeLeftRebind/Button
+@onready var nudge_r_btn: Button = $SettingsPanel/NudgeRightRebind/Button
+@onready var pause_btn: Button = $SettingsPanel/PauseRebind/Button
 
 var is_waiting_for_key: bool = false
 var waiting_action: String = ""
@@ -32,6 +35,9 @@ func _ready():
 	left_flip_btn.pressed.connect(func(): _start_rebind("flipper_left", left_flip_btn))
 	right_flip_btn.pressed.connect(func(): _start_rebind("flipper_right", right_flip_btn))
 	plunger_btn.pressed.connect(func(): _start_rebind("plunger_launch", plunger_btn))
+	nudge_l_btn.pressed.connect(func(): _start_rebind("nudge_left", nudge_l_btn))
+	nudge_r_btn.pressed.connect(func(): _start_rebind("nudge_right", nudge_r_btn))
+	pause_btn.pressed.connect(func(): _start_rebind("pause_toggle", pause_btn))
 	
 	# Load settings into sliders (range 0 to 100)
 	master_slider.value = ScoreManager.master_volume * 100.0
@@ -83,6 +89,9 @@ func _update_rebind_buttons_text():
 	left_flip_btn.text = _get_action_key_text("flipper_left")
 	right_flip_btn.text = _get_action_key_text("flipper_right")
 	plunger_btn.text = _get_action_key_text("plunger_launch")
+	nudge_l_btn.text = _get_action_key_text("nudge_left")
+	nudge_r_btn.text = _get_action_key_text("nudge_right")
+	pause_btn.text = _get_action_key_text("pause_toggle")
 
 func _get_action_key_text(action_name: String) -> String:
 	var events = InputMap.action_get_events(action_name)
@@ -100,11 +109,14 @@ func _on_settings_pressed():
 func _on_exit_pressed():
 	exit_pressed.emit()
 
-func _on_master_changed(value: float):
-	ScoreManager.update_volumes(value / 100.0, ScoreManager.music_volume, ScoreManager.sfx_volume)
+func _on_master_changed(val: float):
+	ScoreManager.master_volume = val / 100.0
+	ScoreManager.save_settings()
 
-func _on_music_changed(value: float):
-	ScoreManager.update_volumes(ScoreManager.master_volume, value / 100.0, ScoreManager.sfx_volume)
+func _on_music_changed(val: float):
+	ScoreManager.music_volume = val / 100.0
+	ScoreManager.save_settings()
 
-func _on_sfx_changed(value: float):
-	ScoreManager.update_volumes(ScoreManager.master_volume, ScoreManager.music_volume, value / 100.0)
+func _on_sfx_changed(val: float):
+	ScoreManager.sfx_volume = val / 100.0
+	ScoreManager.save_settings()

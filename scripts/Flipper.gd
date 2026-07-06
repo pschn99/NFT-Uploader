@@ -1,3 +1,4 @@
+class_name Flipper
 extends AnimatableBody2D
 
 @export var is_right: bool = false
@@ -14,16 +15,17 @@ var pending_strike: bool = false
 var active_ticks: int = 0
 const MIN_ACTIVE_TICKS: int = 6
 var angular_velocity: float = 0.0
+var is_disabled: bool = false # Limp drop flag (Issue H-2)
 
 func _ready():
+	add_to_group("flippers")
 	rest_angle_rad = deg_to_rad(rest_angle_deg)
 	active_angle_rad = deg_to_rad(active_angle_deg)
 	
 	# Auto-adjust defaults symmetrically if it is a right flipper
 	if is_right:
-		if rest_angle_deg == 30.0 and active_angle_deg == -30.0:
-			rest_angle_rad = deg_to_rad(-30.0)
-			active_angle_rad = deg_to_rad(30.0)
+		rest_angle_rad = deg_to_rad(-rest_angle_deg)
+		active_angle_rad = deg_to_rad(-active_angle_deg)
 			
 		# Programmatically mirror vertices for right-sided flippers
 		for child in get_children():
@@ -37,31 +39,44 @@ func _ready():
 				for pt in child.polygon:
 					new_poly.append(Vector2(-pt.x, pt.y))
 				child.polygon = new_poly
-		
+				
 	action_name = "flipper_right" if is_right else "flipper_left"
 	rotation = rest_angle_rad
 
 	print("Flipper initialized: ", name, " (", action_name, ") Rest: ", rad_to_deg(rest_angle_rad), " Active: ", rad_to_deg(active_angle_rad))
 
+func set_disabled(disabled: bool):
+	is_disabled = disabled
+	if disabled:
+		pending_strike = false
+
 func _unhandled_input(event: InputEvent):
+	if is_disabled:
+		return
+		
 	if event.is_action_pressed(action_name):
 		pending_strike = true
-		SoundController.play_sfx("flipper")
+		Events.flipper_activated.emit(is_right) # Decoupled bus emission (Issue M-2)
+	elif event.is_action_released(action_name):
+		Events.flipper_activated.emit(is_right) # Decoupled bus emission (Issue M-2)
 
 func _physics_process(delta: float):
-	var want_active = Input.is_action_pressed(action_name)
-	
-	if pending_strike:
-		want_active = true
-		pending_strike = false
-		active_ticks = 0
+	var want_active = false
+	if not is_disabled:
+		want_active = Input.is_action_pressed(action_name)
 		
-	# Enforce minimum active swing duration (anti-ghosting)
-	if want_active or active_ticks < MIN_ACTIVE_TICKS:
-		active_ticks += 1
-		if active_ticks < MIN_ACTIVE_TICKS:
+		if pending_strike:
 			want_active = true
+			pending_strike = false
+			active_ticks = 0
+			
+		# Enforce minimum active swing duration (anti-ghosting)
+		if want_active or active_ticks < MIN_ACTIVE_TICKS:
+			active_ticks += 1
+			if active_ticks < MIN_ACTIVE_TICKS:
+				want_active = true
 
+	# Limp drop behaves by setting target to rest_angle when disabled
 	var target_angle = active_angle_rad if want_active else rest_angle_rad
 	
 	if rotation == target_angle:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://cptj8w7h88r3k"]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/Plunger.gd" id="1_plunger_gd"]
 
@@ -15,6 +15,7 @@ default_color = Color(1, 1, 1, 1)
 [node name="LaunchArea" type="Area2D" parent="."]
 position = Vector2(0, -30)
 collision_layer = 16
+collision_mask = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LaunchArea"]
 shape = SubResource("RectangleShape2D_launch")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Flipper.tscn" id="1_flipper"]
 [ext_resource type="PackedScene" path="res://scenes/Plunger.tscn" id="2_plunger"]
@@ -103,6 +103,10 @@ b = Vector2(300, 600)
 a = Vector2(300, 600)
 b = Vector2(300, 1200)
 
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_oneway"]
+a = Vector2(1800, 600)
+b = Vector2(2000, 600)
+
 [node name="Table" type="Node2D"]
 
 [node name="LeftBorder" type="StaticBody2D" parent="."]
@@ -200,9 +204,24 @@ active_angle_deg = 30.0
 [node name="DrainArea" type="Area2D" parent="."]
 position = Vector2(900, 2700)
 collision_layer = 16
+collision_mask = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DrainArea"]
 shape = SubResource("RectangleShape2D_drain")
+
+[node name="OneWayGate" type="StaticBody2D" parent="."]
+position = Vector2(0, 0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWayGate"]
+shape = SubResource("SegmentShape2D_oneway")
+one_way_collision = true
+
+[node name="Line" type="Line2D" parent="OneWayGate"]
+points = PackedVector2Array(1800, 600, 2000, 600)
+width = 4.0
+default_color = Color(1, 1, 1, 0.4)
 
 [node name="BumperA" parent="." instance=ExtResource("3_bumper")]
 position = Vector2(700, 700)

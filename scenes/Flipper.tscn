@@ -1,9 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://ddyig6x1l3w5p"]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/Flipper.gd" id="1_flipper_gd"]
 
 [node name="Flipper" type="AnimatableBody2D"]
 collision_layer = 4
+collision_mask = 1
 script = ExtResource("1_flipper_gd")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]

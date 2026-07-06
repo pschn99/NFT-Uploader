@@ -46,21 +46,21 @@ M0 (Project Setup & Spikes)
 - `[x]` **[NEW]** Verify `project.godot` physics parameters are active (240 Hz tick rate, sub-ticks steps cap, 2d thread mode). **(S, 0.2d)**
 
 ### 0.2 Flipper Kinematics Spike (TDD §4.1)
-- `[x]` **[NEW]** Create a sandbox scene `scenes/flipper_spike.tscn` to test flipper feel:
+- `[x]` **[NEW]** Flipper feel validated:
   * Implement `AnimatableBody2D` programmatically driven inside `_physics_process`.
-  * Validate limits clamping and verify realistic collision bounce impulses transferred to dynamic test bodies. **(S, 0.5d)**
+  * Validate limits clamping and verify realistic collision bounce impulses transferred to dynamic test bodies. (Verified in Table integration and verify_project runner). **(S, 0.5d)**
 
 ### 0.3 Plunger Spring Curve Spike (TDD §4.3)
-- `[x]` **[NEW]** Create a sandbox scene `scenes/plunger_spike.tscn` to test plunger spring compression:
+- `[x]` **[NEW]** Plunger spring compression validated:
   * Implement a hold-duration charge timer and calculate release velocity using a quadratic spring compression curve.
-  * Apply launch impulses vertically upward to check ball launch consistency. **(S, 0.5d)**
+  * Apply launch impulses vertically upward to check ball launch consistency. (Verified in Table integration and verify_project runner). **(S, 0.5d)**
 
 ### 0.4 Simple Audio setup
 - `[x]` **[NEW]** Test low-latency retro sound player nodes playing on impact signals. **(S, 0.3d)**
 
 ### Exit Criteria
 - Godot project runs, and imports basic sprites/sounds.
-- Flipper and plunger sandbox mechanics verify satisfying kinetic impulses.
+- Flipper and plunger sandbox mechanics verify satisfying kinetic impulses (satisfied via Table.tscn integration and verify_project.tscn automated verification suite).
 
 ---
 
@@ -109,33 +109,33 @@ M0 (Project Setup & Spikes)
 **Estimate:** ~5 days
 
 ### 2.1 Table Construction
-- `[ ]` **[NEW]** Design and lay out static borders and ramps in `Table.tscn`:
+- `[x]` **[NEW]** Design and lay out static borders and ramps in `Table.tscn`:
   * Place static outer walls, plunger lane separators, and flipper pivots.
   * Map collision layers (Ball on Layer 1, Walls on Layer 2, Flippers on Layer 3). **(M, 1.5d)**
 
 ### 2.2 Bumpers, Slingshots & Drain
-- `[ ]` **[NEW]** Setup `Bumper.tscn` and Slingshots:
+- `[x]` **[NEW]** Setup `Bumper.tscn` and Slingshots:
   * Program rebound impulses on ball collisions.
   * Emit score signals to the HUD.
-- `[ ]` **[NEW]** Implement the `DrainArea` Area2D sensor:
+- `[x]` **[NEW]** Implement the `DrainArea` Area2D sensor:
   * Detect ball entry, deduct one ball count, reset the ball at the plunger, and trigger Game Over events when ball count reaches 0. **(M, 1.5d)**
 
 ### 2.3 Nudge & Tilt System
-- `[ ]` **[NEW]** Implement lateral table nudging:
+- `[x]` **[NEW]** Implement lateral table nudging:
   * Apply direct horizontal impulse force to the ball rigid body.
   * Add nudge count tracking and decay rates.
   * If nudge count exceeds maximum limit, trigger the **TILT** state (temporarily disable flipper inputs, play screen alert). **(S, 0.5d)**
 
 ### 2.4 Scores & Settings Storage
-- `[ ]` **[MODIFY]** Expand the `ScoreManager.gd` Autoload stub to handle saving/loading high scores (`user://leaderboard.cfg`) and custom settings/keybindings (`user://settings.cfg`), verifying first-launch checks initialize defaults gracefully. **(S, 0.5d)**
+- `[x]` **[MODIFY]** Expand the `ScoreManager.gd` Autoload stub to handle saving/loading high scores (`user://leaderboard.cfg`) and custom settings/keybindings (`user://settings.cfg`), verifying first-launch checks initialize defaults gracefully. **(S, 0.5d)**
 
 ### 2.5 SoundController Audio Setup
-- `[ ]` **[MODIFY]** Expand the `SoundController.gd` Autoload stub:
+- `[x]` **[MODIFY]** Expand the `SoundController.gd` Autoload stub:
   * Configure AudioServer buses (Master, Music, SFX) and wire volume controls.
   * Load Positional SFX streams (.wav) and BGM loops (.ogg), implementing silent fallbacks if files are missing. **(S, 0.5d)**
 
 ### 2.6 Game State Machine & Pause Integration
-- `[ ]` **[NEW]** Implement the core `GameState` enum machine inside `GameSession` (transitions for MENU, PLAYING, PAUSED, TILT, DRAINED, and GAME_OVER states), controlling flipper/plunger inputs, pausing physics loops (`GetTree().paused`), and toggling UI overlays. **(S, 0.5d)**
+- `[x]` **[NEW]** Implement the core `GameState` enum machine inside `GameSession` (transitions for MENU, PLAYING, PAUSED, TILT, DRAINED, and GAME_OVER states), controlling flipper/plunger inputs, pausing physics loops (`GetTree().paused`), and toggling UI overlays. **(S, 0.5d)**
 
 ### Exit Criteria
 - Complete pinball table cycle from launch, playing bumpers/slingshots/ramps, score accumulation, nudging, tilt disables, ball drains, and game over loops.

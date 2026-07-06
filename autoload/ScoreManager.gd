@@ -1,6 +1,5 @@
 extends Node
 
-
 signal score_changed(new_score: int)
 signal multiplier_changed(new_mult: float)
 signal balls_changed(new_balls: int)
@@ -14,6 +13,7 @@ const SETTINGS_PATH: String = "user://settings.cfg"
 var current_score: int = 0
 var score_multiplier: float = 1.0
 var balls_remaining: int = 3
+var scoring_enabled: bool = true
 
 # High score entry layout: Array of Dictionary {"initials": String, "score": int}
 var leaderboard_entries: Array = []
@@ -26,17 +26,28 @@ var sfx_volume: float = 0.8
 func _ready():
 	load_leaderboard()
 	load_settings()
+	
+	# Connect to decoupled event bus (TDD §1.3 / Issues 4 & 9)
+	Events.bumper_hit.connect(_on_bumper_hit)
+	Events.slingshot_hit.connect(_on_slingshot_hit)
+	Events.rollover_triggered.connect(_on_rollover_triggered)
+	Events.ramp_completed.connect(_on_ramp_completed)
+	Events.tilt_triggered.connect(func(): scoring_enabled = false)
+	Events.tilt_recovered.connect(func(): scoring_enabled = true)
 
 # --- Game Lifecycle Management ---
 func reset_session():
 	current_score = 0
 	score_multiplier = 1.0
 	balls_remaining = 3
+	scoring_enabled = true
 	score_changed.emit(current_score)
 	multiplier_changed.emit(score_multiplier)
 	balls_changed.emit(balls_remaining)
 
 func add_score(amount: int):
+	if not scoring_enabled:
+		return
 	var points = int(amount * score_multiplier)
 	current_score += points
 	score_changed.emit(current_score)
@@ -53,6 +64,20 @@ func use_ball() -> bool:
 	balls_remaining -= 1
 	balls_changed.emit(balls_remaining)
 	return balls_remaining > 0
+
+# --- Event Bus Handlers ---
+func _on_bumper_hit(score: int):
+	add_score(score)
+
+func _on_slingshot_hit(score: int):
+	add_score(score)
+
+func _on_rollover_triggered(score: int):
+	add_score(score)
+
+func _on_ramp_completed(score: int):
+	add_score(score)
+	increment_multiplier(1.0)
 
 # --- Leaderboard Config Persistence ---
 func load_leaderboard():
@@ -92,23 +117,19 @@ func is_high_score(score: int) -> bool:
 	if leaderboard_entries.size() < 5:
 		return true
 	for entry in leaderboard_entries:
-		if score > entry["score"]:
+		if score >= entry["score"]:
 			return true
 	return false
 
 func add_high_score(initials: String, score: int):
-	# Clean up input initials to uppercase and max 3 chars
 	var clean_initials = initials.to_upper().substr(0, 3)
 	if clean_initials.is_empty():
 		clean_initials = "PBL"
 		
 	var new_entry = {"initials": clean_initials, "score": score}
 	leaderboard_entries.append(new_entry)
-	
-	# Sort entries descending by score
 	leaderboard_entries.sort_custom(func(a, b): return a["score"] > b["score"])
 	
-	# Clamp to top 5 entries
 	if leaderboard_entries.size() > 5:
 		leaderboard_entries.resize(5)
 		
@@ -127,7 +148,7 @@ func load_settings():
 		_apply_volumes()
 		
 		# Load custom keybindings if present
-		var actions = ["flipper_left", "flipper_right", "plunger_launch"]
+		var actions = ["flipper_left", "flipper_right", "plunger_launch", "nudge_left", "nudge_right", "pause_toggle"]
 		for action in actions:
 			var saved_key = config.get_value("controls", action, -1)
 			if saved_key != -1:
@@ -141,7 +162,6 @@ func load_settings():
 				print("ScoreManager: Applied custom keybind for ", action, ": ", OS.get_keycode_string(saved_key))
 		return
 		
-	# First launch settings defaults
 	print("ScoreManager: Initializing default settings...")
 	master_volume = 0.8
 	music_volume = 0.8
@@ -179,7 +199,6 @@ func save_keybinding(action_name: String, keycode: int):
 		print("ScoreManager: Saved custom keybind for ", action_name, ": ", OS.get_keycode_string(keycode))
 
 func _apply_volumes():
-	# Map volume ratio 0.0 - 1.0 to decibels (dB = 20 * log10(ratio))
 	_set_bus_vol("Master", master_volume)
 	_set_bus_vol("Music", music_volume)
 	_set_bus_vol("SFX", sfx_volume)
@@ -191,6 +210,6 @@ func _set_bus_vol(bus_name: String, ratio: float):
 			AudioServer.set_bus_mute(bus_idx, true)
 		else:
 			AudioServer.set_bus_mute(bus_idx, false)
-			var db = 20.0 * log(ratio) / log(10.0) # change base of log
+			# Idiomatic volume db conversion using linear_to_db (Issue M2-18 / TD-8)
+			var db = linear_to_db(ratio)
 			AudioServer.set_bus_volume_db(bus_idx, clamp(db, -80.0, 6.0))
-

@@ -5,6 +5,7 @@ extends RigidBody2D
 
 var trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 16
+const MAX_SPEED: float = 2500.0 # Clamp max speed to prevent tunneling (Issue M-1)
 
 func _ready():
 	contact_monitor = true
@@ -27,6 +28,11 @@ func _draw():
 	# Render the dynamic ball visually as a 1-bit white circle
 	draw_circle(Vector2.ZERO, 15.0, Color.WHITE)
 
+func _physics_process(_delta: float):
+	# Clamp velocity to prevent physical tunneling or instabilities
+	if linear_velocity.length() > MAX_SPEED:
+		linear_velocity = linear_velocity.limit_length(MAX_SPEED)
+
 func _process(_delta: float):
 	# Record global coordinate history for the visual trail
 	trail_points.append(global_position)
@@ -42,14 +48,12 @@ func _on_body_entered(body: Node2D):
 		body.hit(self)
 		return
 		
-	# Default fallback for simple collisions (walls, flippers)
+	# Emit decoupled impact signals (TDD §1.3 / Issue 2)
+	var speed = linear_velocity.length()
+	Events.ball_impact.emit(speed)
+	
 	if body.name.begins_with("Flipper"):
-		SoundController.play_sfx("flipper")
+		# Flipper activation sound now routed via Events bus (Issue M-2)
+		Events.flipper_activated.emit(body.is_right)
 	else:
-		SoundController.play_sfx("nudge")
-			
-	# Emit trauma shake based on relative speed
-	var session = get_node_or_null("/root/Main/GameSession")
-	if session and session.has_method("add_camera_trauma"):
-		var impact = linear_velocity.length() / 1000.0
-		session.add_camera_trauma(clamp(impact, 0.1, 0.5))
+		SoundController.play_sfx("wall_hit")

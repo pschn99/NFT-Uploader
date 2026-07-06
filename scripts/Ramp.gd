@@ -1,3 +1,4 @@
+class_name Ramp
 extends Node2D
 
 @export var entrance_path: NodePath
@@ -29,11 +30,9 @@ func _on_exit_entered(body: Node2D):
 			var current_time = Time.get_ticks_msec() / 1000.0
 			var diff = current_time - entrance_time
 			if diff <= max_time_window:
-				# Success! Award points & increment multiplier
-				ScoreManager.add_score(score_value)
-				ScoreManager.increment_multiplier(multiplier_increase)
-				SoundController.play_sfx("plunger_release") # Ascent retro synth chime
-				print("Ramp: Completed successfully in ", diff, "s! Multiplier increased.")
+				# Decoupled signal emission (TDD §1.3 / Issue 2 & 4)
+				Events.ramp_completed.emit(score_value)
+				print("Ramp: Completed successfully in ", diff, "s!")
 			else:
 				print("Ramp: Too slow. Time taken: ", diff, "s (max: ", max_time_window, "s)")
 			entrance_time = -1.0

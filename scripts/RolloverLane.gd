@@ -1,3 +1,4 @@
+class_name RolloverLane
 extends Area2D
 
 @export var score_value: int = 200
@@ -10,10 +11,8 @@ func _ready():
 
 func _on_body_entered(body: Node2D):
 	if body is RigidBody2D:
-		ScoreManager.add_score(score_value)
-		
-		# Play retro chiptune blip
-		SoundController.play_sfx("nudge")
+		# Decoupled signal emission (TDD §1.3 / Issue 2 & 4)
+		Events.rollover_triggered.emit(score_value)
 		
 		# Toggle light off and on to flash
 		light.visible = false

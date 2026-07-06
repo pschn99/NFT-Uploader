@@ -19,6 +19,9 @@ func _on_play_pressed():
 	print("Main: Starting game session...")
 	start_menu.visible = false
 	
+	# Initialize ScoreManager session values first (Issue 12)
+	ScoreManager.reset_session()
+	
 	# Instantiate GameSession
 	active_session = GAME_SESSION_SCENE.instantiate()
 	add_child(active_session)
@@ -26,9 +29,6 @@ func _on_play_pressed():
 	
 	# Connect to session completion events
 	active_session.game_completed.connect(_on_game_completed)
-	
-	# Initialize ScoreManager session values
-	ScoreManager.reset_session()
 
 func _on_game_completed(final_score: int):
 	print("Main: Game session finished. Final score: ", final_score)

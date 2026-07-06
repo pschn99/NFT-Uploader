@@ -1,3 +1,4 @@
+class_name Slingshot
 extends StaticBody2D
 
 @export var score_value: int = 50
@@ -6,17 +7,15 @@ extends StaticBody2D
 @export var is_right: bool = false
 
 @onready var fill_poly: Polygon2D = $FillPoly
-@onready var active_face: Area2D = $ActiveFace
-@onready var active_shape: CollisionShape2D = $ActiveFace/CollisionShape2D
+
+var flash_tween: Tween = null
 
 func _ready():
-	active_face.body_entered.connect(_on_active_face_entered)
 	fill_poly.visible = true
 	
 	if is_right:
-		# Auto-adjust normal direction symmetrically
-		if kick_direction == Vector2(0.83, -0.55):
-			kick_direction = Vector2(-0.83, -0.55)
+		# Auto-adjust normal direction symmetrically (Issue 3b)
+		kick_direction = Vector2(-kick_direction.x, kick_direction.y)
 			
 		# Programmatically mirror vertices for right flipper
 		for child in get_children():
@@ -35,27 +34,20 @@ func _ready():
 				for pt in child.points:
 					new_points.append(Vector2(-pt.x, pt.y))
 				child.points = new_points
-		
-		# Programmatically duplicate and mirror SegmentShape2D
-		if active_shape and active_shape.shape is SegmentShape2D:
-			var seg = active_shape.shape.duplicate()
-			seg.a = Vector2(-seg.a.x, seg.a.y)
-			seg.b = Vector2(-seg.b.x, seg.b.y)
-			active_shape.shape = seg
 
-func _on_active_face_entered(body: Node2D):
-	if body is RigidBody2D:
-		ScoreManager.add_score(score_value)
-		SoundController.play_sfx("slingshot")
-		
-		# Kick velocity vector perpendicular to active face
-		body.linear_velocity = kick_direction.normalized() * kick_speed
-		
-		# Invert/hollow flash
-		fill_poly.visible = false
-		var t = get_tree().create_timer(0.1)
-		t.timeout.connect(func(): fill_poly.visible = true)
-		
-		var session = get_node_or_null("/root/Main/GameSession")
-		if session and session.has_method("add_camera_trauma"):
-			session.add_camera_trauma(0.2)
+func hit(ball: RigidBody2D):
+	# Decoupled signal emission (TDD §1.3 / Issue 2 & 4)
+	Events.slingshot_hit.emit(score_value)
+	Events.ball_impact.emit(kick_speed)
+	
+	# Apply realistic rebound physics combining reflected incoming speed & kick speed (Issue TD-4 / M-3)
+	var reflected = ball.linear_velocity.reflect(kick_direction.normalized())
+	var incoming_speed = reflected.length()
+	ball.linear_velocity = kick_direction.normalized() * (incoming_speed * 0.3 + kick_speed)
+	
+	# Safe tween-based visual hollow flash animation (remediation of L-3)
+	if flash_tween:
+		flash_tween.kill()
+	fill_poly.visible = false
+	flash_tween = create_tween()
+	flash_tween.tween_callback(func(): fill_poly.visible = true).set_delay(0.1)

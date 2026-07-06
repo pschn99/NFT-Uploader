@@ -36,11 +36,11 @@ func _unhandled_input(event: InputEvent):
 		return
 		
 	# Cycle cursor left/right
-	if event.is_action_pressed("nudge_left") or event.is_action_pressed("ui_left"):
+	if event.is_action_pressed("ui_left"):
 		cursor_index = (cursor_index - 1 + 3) % 3
 		update_indicators()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("nudge_right") or event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("ui_right"):
 		cursor_index = (cursor_index + 1) % 3
 		update_indicators()
 		get_viewport().set_input_as_handled()
@@ -54,7 +54,7 @@ func _unhandled_input(event: InputEvent):
 		update_char_displays()
 		get_viewport().set_input_as_handled()
 	# Confirm initials
-	elif event.is_action_pressed("plunger_launch") or event.is_action_pressed("ui_accept"):
+	elif event.is_action_pressed("ui_accept"):
 		var initials = characters[active_char_indices[0]] + characters[active_char_indices[1]] + characters[active_char_indices[2]]
 		initials_confirmed.emit(initials)
 		get_viewport().set_input_as_handled()

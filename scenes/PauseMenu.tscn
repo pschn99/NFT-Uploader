@@ -170,3 +170,51 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "SPACE"
 
+[node name="NudgeLeftRebind" type="HBoxContainer" parent="SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="SettingsPanel/NudgeLeftRebind"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "NUDGE L"
+
+[node name="Button" type="Button" parent="SettingsPanel/NudgeLeftRebind"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "A"
+
+[node name="NudgeRightRebind" type="HBoxContainer" parent="SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="SettingsPanel/NudgeRightRebind"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "NUDGE R"
+
+[node name="Button" type="Button" parent="SettingsPanel/NudgeRightRebind"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "D"
+
+[node name="PauseRebind" type="HBoxContainer" parent="SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="SettingsPanel/PauseRebind"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "PAUSE"
+
+[node name="Button" type="Button" parent="SettingsPanel/PauseRebind"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "ESC"
+

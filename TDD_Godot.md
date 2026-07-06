@@ -256,13 +256,14 @@ The physics world enforces collision interactions using the following dedicated 
 To keep the game architecture highly decoupled, inter-system events use Godot's built-in **Signals**.
 
 ```gdscript
-signal ball_impact(position: Vector2, impulse: float)
+signal ball_impact(velocity: float)
 signal bumper_hit(score_value: int)
-signal ramp_completed(multiplier_increment: float)
-signal nudge_fired(direction: String)
-signal tilt_warning(warning_number: int)
-signal table_tilted()
-signal ball_drained()
+signal slingshot_hit(score_value: int)
+signal rollover_triggered(score_value: int)
+signal ramp_completed(score_value: int)
+signal nudge_triggered(tilt_count: int)
+signal tilt_triggered()
+signal tilt_recovered()
 ```
 
 ---

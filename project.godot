@@ -34,9 +34,20 @@ ScoreManager="*res://autoload/ScoreManager.gd"
 
 window/size/viewport_width=1000
 window/size/viewport_height=1500
+window/size/window_width_override=600
+window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 
 [physics]
 
 2d/run_on_separate_thread=true
 common/physics_ticks_per_second=240
+common/max_physics_steps_per_frame=8
+
+[layer_names]
+
+2d_physics/layer_1="Ball"
+2d_physics/layer_2="Walls"
+2d_physics/layer_3="Flippers"
+2d_physics/layer_4="Bumpers"
+2d_physics/layer_5="Sensors"
