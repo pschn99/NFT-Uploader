@@ -33,13 +33,15 @@ These principles govern every system, node configuration, and script in this pro
 
 ### 2.1 Physics Engine Configuration Settings (`project.godot`)
 
-To guarantee physics solver precision and prevent collision issues, the following configurations must be explicitly written in the project settings or directly configured in `project.godot`:
+To guarantee physics solver precision and prevent collision issues, the following configurations must be explicitly configured. While 240 Hz is the standard target, developers can scale the rate down to 180 Hz or 120 Hz for lower-power devices (mobile/web builds), provided that Continuous Collision Detection (CCD) is kept enabled.
+
+*Note: Running 2D physics on a separate thread can cause sporadic physics desyncs on macOS/Linux with certain GPU drivers. If desync issues arise during QA, set `run_on_separate_thread = false`.*
 
 ```ini
 [physics]
-common/physics_ticks_per_second = 240      ; Run solver at 240 Hz (4 sub-ticks per 60fps frame)
+common/physics_ticks_per_second = 240      ; Target rate for substepping (fallback to 120 or 180 if needed)
 common/max_physics_steps_per_frame = 8     ; Cap physics loop iterations to prevent execution death spiral
-2d/run_on_separate_thread = true           ; Decouple physics step processing from rendering loops
+2d/run_on_separate_thread = true           ; Decouple physics step processing from rendering loops (fallback to false if desyncs occur)
 ```
 
 ### 2.2 Measurement Units & Pixel-to-Meter Scaling
@@ -98,7 +100,18 @@ root (SceneTree)
 * **MainScene:** Boot controller. Handles loading menus, managing game sessions, and displaying the local leaderboard.
 * **GameSession:** Spawns when a play session begins. Manages the active play cycles, tracks active ball stocks, and handles reset/gameover state transitions.
 * **Ball (RigidBody2D):** Dynamic ball entity. Emits a visual trail using a simple trailing `Line2D` node that tracks recent global coordinate histories.
-* **Camera2D:** Static viewport camera. The camera position is locked to the table center (e.g. `Vector2(0, 0)`), with `position_smoothing_enabled = false` and `drag` margins set to `0` (horizontal and vertical) to ensure the table remains completely visible at all times. Viewport shake effects are implemented by programmatically adding screen-shake offsets (trauma damping math) to the camera's `offset` property in `_process` upon receiving impact or nudge signals.
+* **Camera2D Setup:**
+
+* **Node Type:** `Camera2D` attached to the `GameSession` node.
+* **Framing Target:**
+  * **Viewport Size:** `1000` × `1500` pixels.
+  * **Default Window Size:** `600` × `900` pixels (allows scaled down windowing).
+  * **Position:** Fixed at the center coordinates `Vector2(1000, 1500)`.
+  * **Zoom:** Set to `Vector2(0.5, 0.5)`. This scales the `2000` × `3000` pixel table down by half to fit the viewport dimensions cleanly.
+* **Properties:**
+  * `position_smoothing_enabled = false`
+  * `drag` margins set to `0`
+* **Trauma Shake:** Screen shake is driven by a trauma model. Impact and nudge signals add a trauma decimal value between `0.0` and `1.0`. In `_process(delta)`, trauma decays linearly. The camera offset is set by applying a random rotation and directional offset using noise (e.g. `FastNoiseLite`) scaled by `trauma^2` applied directly to `Camera2D.offset` (damped inside `_process`).
 * **ScoreManager (Autoload):** Manages current run score, multiplier triggers, and persists high scores to disk.
 * **SoundController (Autoload):** Manages simple looping retro synthesizer backtracks and plays impact SFX on signal triggers.
 
@@ -110,6 +123,7 @@ Gameplay execution flow is managed within `GameSession` using a clean state mach
 enum GameState {
     MENU,       # Table inputs disabled. HUD displays local high scores. Plunger lane empty.
     PLAYING,    # Standard active play. Flippers, nudges, plunger, and score managers active.
+    PAUSED,     # Gameplay paused. Physics processing halted; Pause Menu Overlay visible.
     TILT,       # Nudge limit exceeded. Flipper inputs disabled; flippers drop limply; scoring disabled.
     DRAINED,    # Ball has entered the drain sensor. Input and score tracking paused; decrements ball count.
     GAME_OVER   # All balls lost. Displays initials entry overlay if a new high score is achieved.
@@ -125,6 +139,42 @@ enum GameState {
 6. **Ball Respawn:** Transitions from `DRAINED` to `PLAYING` (if remaining balls > 0) after instantiating a fresh ball in the plunger pocket.
 7. **No Balls Remaining:** Transitions from `DRAINED` to `GAME_OVER` (if remaining balls == 0). Displays the high score registration overlay.
 8. **High Score Confirmed / Exit:** Transitions from `GAME_OVER` back to `MENU`.
+9. **Pause Input Toggle (Esc/Start):** Transitions from `PLAYING` to `PAUSED` (setting `GetTree().paused = true` and opening the Pause Overlay), or transitions from `PAUSED` to `PLAYING` (setting `GetTree().paused = false` and closing the overlay).
+
+### 3.4 Audio Architecture
+
+Positional and global audio streams are routed through Godot's AudioServer bus configuration to ensure low latency and responsive playback:
+
+* **Audio Streams & Formats:**
+  * **Positional Sound Effects (SFX):** Loaded as raw `.wav` streams for low-latency hardware execution (e.g. bumper hits, flipper releases).
+  * **Background Music (BGM):** Loaded as `.ogg` streams to optimize storage footprints and support clean loop transitions.
+* **Audio Buses:**
+  * **Master:** Central audio output.
+  * **Music** (child of Master): Background track bus. Pausing the game utilizes a low-pass filter effect or volume reduction (`AudioServer.set_bus_volume_db`) on this bus.
+  * **SFX** (child of Master): Positional sound effects bus.
+* **SoundController (Autoload):**
+  * Spawns instances of `AudioStreamPlayer` for music and a pool of `AudioStreamPlayer2D` nodes for 2D spatial collision sounds.
+  * Captures signals emitted by physics nodes (`ball_impact`, `bumper_hit`, `table_tilted`) and triggers corresponding sound playback.
+  * **Fallback Handling:** If an audio resource is missing or corrupt, the script handles the exception gracefully (using standard error codes and printing warnings) by falling back to a silent state without crashing.
+
+### 3.5 User Interface CanvasLayers
+
+The UI uses independent `CanvasLayer` structures to separate rendering from the physical play scene and manage layered displays:
+
+1. **`HUD` Overlay:**
+   * **Node:** `HUD.tscn` (always active under `GameSession`).
+   * **UI Elements:** Score label, score multiplier banner, and dynamic ball count indicators.
+   * **Processing:** The HUD has its `process_mode` set to `PROCESS_MODE_ALWAYS` to ensure score/balls updates and transitions render cleanly during pause state changes.
+2. **`StartMenu` Screen:**
+   * **Node:** `StartMenu.tscn` (active under `MainScene` during `MENU` state).
+   * **UI Elements:** Game title, Play button, and local Leaderboard list showing top 5 scores.
+3. **`InitialsEntry` Screen:**
+   * **Node:** `InitialsEntry.tscn` (active under `MainScene` during `GAME_OVER` state when a new high score is achieved).
+   * **UI Elements:** Text prompt showing "NEW HIGH SCORE", character cycles (A-Z), and Confirm button.
+4. **`PauseMenu` Screen:**
+   * **Node:** `PauseMenu.tscn` (active under `GameSession` during `PAUSED` state).
+   * **UI Elements:** Pause banner, Resume button, Settings/Keybindings panel, and Exit button.
+   * **Processing:** The pause menu has its `process_mode` set to `PROCESS_MODE_WHEN_PAUSED`, allowing it to process button hover and press inputs while the main physics loop is frozen.
 
 ---
 
@@ -223,6 +273,10 @@ High scores and key configurations are persisted using Godot's `ConfigFile` API 
 
 * **Leaderboard Path:** `user://leaderboard.cfg`
 * **Settings Path:** `user://settings.cfg`
+* **First-Launch Guards:**
+  The `ScoreManager` and config loading scripts must check `FileAccess.file_exists(path)` on boot. If the config files do not exist (e.g. first-launch), the scripts must initialize the local files with default parameters:
+  * **Leaderboard Defaults:** Empty top 5 list initialized with default placeholder scores (e.g., 5000, 4000, 3000, 2000, 1000) and standard initials (e.g., "PBL").
+  * **Settings Defaults:** Default controls mappings (Z/Left Arrow, X/Right Arrow, Space, A, D, Esc) and default volume levels set to 80% (0.8).
 * **Version Control:**
   All save files are written with a constant version header to allow clean parsing:
   ```gdscript

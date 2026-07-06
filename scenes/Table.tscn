@@ -1,0 +1,315 @@
+[gd_scene load_steps=31 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Flipper.tscn" id="1_flipper"]
+[ext_resource type="PackedScene" path="res://scenes/Plunger.tscn" id="2_plunger"]
+[ext_resource type="PackedScene" path="res://scenes/Bumper.tscn" id="3_bumper"]
+[ext_resource type="PackedScene" path="res://scenes/Slingshot.tscn" id="4_slingshot"]
+[ext_resource type="PackedScene" path="res://scenes/RolloverLane.tscn" id="5_rollover"]
+[ext_resource type="PackedScene" path="res://scenes/RampGate.tscn" id="6_rampgate"]
+[ext_resource type="Script" path="res://scripts/Ramp.gd" id="7_ramp_gd"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_drain"]
+size = Vector2(440, 80)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_l1"]
+a = Vector2(0, 50)
+b = Vector2(0, 2200)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_l2"]
+a = Vector2(0, 2200)
+b = Vector2(680, 2500)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_l3"]
+a = Vector2(680, 2500)
+b = Vector2(680, 3000)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_r1"]
+a = Vector2(1800, 50)
+b = Vector2(1800, 2200)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_r2"]
+a = Vector2(1800, 2200)
+b = Vector2(1120, 2500)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_r3"]
+a = Vector2(1120, 2500)
+b = Vector2(1120, 3000)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_sep"]
+a = Vector2(1800, 600)
+b = Vector2(1800, 2500)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_o1"]
+a = Vector2(2000, 200)
+b = Vector2(2000, 2600)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_o2"]
+a = Vector2(1800, 2600)
+b = Vector2(2000, 2600)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_t1"]
+a = Vector2(2000, 200)
+b = Vector2(1800, 50)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_t2"]
+a = Vector2(1800, 50)
+b = Vector2(0, 50)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_div1"]
+a = Vector2(675, 50)
+b = Vector2(675, 450)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_div2"]
+a = Vector2(1125, 50)
+b = Vector2(1125, 450)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_o1"]
+a = Vector2(1600, 1200)
+b = Vector2(1600, 500)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_o2"]
+a = Vector2(1600, 500)
+b = Vector2(1400, 200)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_o3"]
+a = Vector2(1400, 200)
+b = Vector2(400, 200)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_o4"]
+a = Vector2(400, 200)
+b = Vector2(200, 500)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_o5"]
+a = Vector2(200, 500)
+b = Vector2(200, 1200)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_i1"]
+a = Vector2(1500, 1200)
+b = Vector2(1500, 600)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_i2"]
+a = Vector2(1500, 600)
+b = Vector2(1300, 300)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_i3"]
+a = Vector2(1300, 300)
+b = Vector2(500, 300)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_i4"]
+a = Vector2(500, 300)
+b = Vector2(300, 600)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_ramp_i5"]
+a = Vector2(300, 600)
+b = Vector2(300, 1200)
+
+[node name="Table" type="Node2D"]
+
+[node name="LeftBorder" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape1" type="CollisionShape2D" parent="LeftBorder"]
+shape = SubResource("SegmentShape2D_l1")
+
+[node name="Shape2" type="CollisionShape2D" parent="LeftBorder"]
+shape = SubResource("SegmentShape2D_l2")
+
+[node name="Shape3" type="CollisionShape2D" parent="LeftBorder"]
+shape = SubResource("SegmentShape2D_l3")
+
+[node name="Line" type="Line2D" parent="LeftBorder"]
+points = PackedVector2Array(0, 50, 0, 2200, 680, 2500, 680, 3000)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="RightBorder" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape1" type="CollisionShape2D" parent="RightBorder"]
+shape = SubResource("SegmentShape2D_r1")
+
+[node name="Shape2" type="CollisionShape2D" parent="RightBorder"]
+shape = SubResource("SegmentShape2D_r2")
+
+[node name="Shape3" type="CollisionShape2D" parent="RightBorder"]
+shape = SubResource("SegmentShape2D_r3")
+
+[node name="Line" type="Line2D" parent="RightBorder"]
+points = PackedVector2Array(1800, 50, 1800, 2200, 1120, 2500, 1120, 3000)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="PlungerSeparator" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="PlungerSeparator"]
+shape = SubResource("SegmentShape2D_sep")
+
+[node name="Line" type="Line2D" parent="PlungerSeparator"]
+points = PackedVector2Array(1800, 600, 1800, 2500)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="OuterPlungerWall" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape1" type="CollisionShape2D" parent="OuterPlungerWall"]
+shape = SubResource("SegmentShape2D_o1")
+
+[node name="Shape2" type="CollisionShape2D" parent="OuterPlungerWall"]
+shape = SubResource("SegmentShape2D_o2")
+
+[node name="Line" type="Line2D" parent="OuterPlungerWall"]
+points = PackedVector2Array(2000, 200, 2000, 2600, 1800, 2600)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="TopCover" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape1" type="CollisionShape2D" parent="TopCover"]
+shape = SubResource("SegmentShape2D_t1")
+
+[node name="Shape2" type="CollisionShape2D" parent="TopCover"]
+shape = SubResource("SegmentShape2D_t2")
+
+[node name="Line" type="Line2D" parent="TopCover"]
+points = PackedVector2Array(2000, 200, 1800, 50, 0, 50)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="Plunger" parent="." instance=ExtResource("2_plunger")]
+position = Vector2(1900, 2520)
+
+[node name="FlipperLeft" parent="." groups=["flippers"] instance=ExtResource("1_flipper")]
+position = Vector2(680, 2500)
+rest_angle_deg = 30.0
+active_angle_deg = -30.0
+
+[node name="FlipperRight" parent="." groups=["flippers"] instance=ExtResource("1_flipper")]
+position = Vector2(1120, 2500)
+is_right = true
+rest_angle_deg = -30.0
+active_angle_deg = 30.0
+
+[node name="DrainArea" type="Area2D" parent="."]
+position = Vector2(900, 2700)
+collision_layer = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DrainArea"]
+shape = SubResource("RectangleShape2D_drain")
+
+[node name="BumperA" parent="." instance=ExtResource("3_bumper")]
+position = Vector2(700, 700)
+
+[node name="BumperB" parent="." instance=ExtResource("3_bumper")]
+position = Vector2(1100, 700)
+
+[node name="BumperC" parent="." instance=ExtResource("3_bumper")]
+position = Vector2(900, 1000)
+
+[node name="SlingshotLeft" parent="." instance=ExtResource("4_slingshot")]
+position = Vector2(550, 2000)
+
+[node name="SlingshotRight" parent="." instance=ExtResource("4_slingshot")]
+position = Vector2(1250, 2000)
+is_right = true
+
+[node name="RolloverLane1" parent="." instance=ExtResource("5_rollover")]
+position = Vector2(450, 300)
+
+[node name="RolloverLane2" parent="." instance=ExtResource("5_rollover")]
+position = Vector2(900, 300)
+
+[node name="RolloverLane3" parent="." instance=ExtResource("5_rollover")]
+position = Vector2(1350, 300)
+
+[node name="LaneDivider1" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LaneDivider1"]
+shape = SubResource("SegmentShape2D_div1")
+
+[node name="Line" type="Line2D" parent="LaneDivider1"]
+points = PackedVector2Array(675, 50, 675, 450)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="LaneDivider2" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LaneDivider2"]
+shape = SubResource("SegmentShape2D_div2")
+
+[node name="Line" type="Line2D" parent="LaneDivider2"]
+points = PackedVector2Array(1125, 50, 1125, 450)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="RampOuterWall" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape1" type="CollisionShape2D" parent="RampOuterWall"]
+shape = SubResource("SegmentShape2D_ramp_o1")
+
+[node name="Shape2" type="CollisionShape2D" parent="RampOuterWall"]
+shape = SubResource("SegmentShape2D_ramp_o2")
+
+[node name="Shape3" type="CollisionShape2D" parent="RampOuterWall"]
+shape = SubResource("SegmentShape2D_ramp_o3")
+
+[node name="Shape4" type="CollisionShape2D" parent="RampOuterWall"]
+shape = SubResource("SegmentShape2D_ramp_o4")
+
+[node name="Shape5" type="CollisionShape2D" parent="RampOuterWall"]
+shape = SubResource("SegmentShape2D_ramp_o5")
+
+[node name="Line" type="Line2D" parent="RampOuterWall"]
+points = PackedVector2Array(1600, 1200, 1600, 500, 1400, 200, 400, 200, 200, 500, 200, 1200)
+width = 4.0
+default_color = Color(1, 1, 1, 0.5)
+
+[node name="RampInnerWall" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape1" type="CollisionShape2D" parent="RampInnerWall"]
+shape = SubResource("SegmentShape2D_ramp_i1")
+
+[node name="Shape2" type="CollisionShape2D" parent="RampInnerWall"]
+shape = SubResource("SegmentShape2D_ramp_i2")
+
+[node name="Shape3" type="CollisionShape2D" parent="RampInnerWall"]
+shape = SubResource("SegmentShape2D_ramp_i3")
+
+[node name="Shape4" type="CollisionShape2D" parent="RampInnerWall"]
+shape = SubResource("SegmentShape2D_ramp_i4")
+
+[node name="Shape5" type="CollisionShape2D" parent="RampInnerWall"]
+shape = SubResource("SegmentShape2D_ramp_i5")
+
+[node name="Line" type="Line2D" parent="RampInnerWall"]
+points = PackedVector2Array(1500, 1200, 1500, 600, 1300, 300, 500, 300, 300, 600, 300, 1200)
+width = 4.0
+default_color = Color(1, 1, 1, 0.5)
+
+[node name="Ramp" type="Node2D" parent="."]
+script = ExtResource("7_ramp_gd")
+entrance_path = NodePath("EntranceGate")
+exit_path = NodePath("ExitGate")
+
+[node name="EntranceGate" parent="Ramp" instance=ExtResource("6_rampgate")]
+position = Vector2(1550, 1200)
+rotation = 1.5708
+
+[node name="ExitGate" parent="Ramp" instance=ExtResource("6_rampgate")]
+position = Vector2(250, 1200)
+rotation = 1.5708

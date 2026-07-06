@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/Slingshot.gd" id="1_slingshot_gd"]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_face"]
+a = Vector2(0, 0)
+b = Vector2(80, 120)
+
+[node name="Slingshot" type="StaticBody2D"]
+collision_layer = 8
+script = ExtResource("1_slingshot_gd")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, 80, 120, 0, 160)
+
+[node name="FillPoly" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, 80, 120, 0, 160)
+color = Color(1, 1, 1, 1)
+
+[node name="Outline" type="Line2D" parent="."]
+points = PackedVector2Array(0, 0, 80, 120, 0, 160, 0, 0)
+width = 4.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="ActiveFace" type="Area2D" parent="."]
+collision_layer = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActiveFace"]
+shape = SubResource("SegmentShape2D_face")

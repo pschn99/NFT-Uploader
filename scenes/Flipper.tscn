@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://ddyig6x1l3w5p"]
+
+[ext_resource type="Script" path="res://scripts/Flipper.gd" id="1_flipper_gd"]
+
+[node name="Flipper" type="AnimatableBody2D"]
+collision_layer = 4
+script = ExtResource("1_flipper_gd")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(0, -20, 160, -10, 160, 10, 0, 20)
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -20, 160, -10, 160, 10, 0, 20)
+color = Color(1, 1, 1, 1)

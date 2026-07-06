@@ -36,8 +36,9 @@
 1. **Launch:** Pull back the mechanical plunger to shoot the ball into the table.
 2. **Active Play:** Use the left and right flippers to hit bumpers, trigger slingshots, complete lane sequences, and loop ramps to accumulate score points.
 3. **Save/Nudge:** Nudge the table laterally if the ball gets too close to the drain pocket, risking a Tilt penalty if nudged too aggressively.
-4. **Drain:** Let the ball fall past the baseline flippers into the drain. This costs 1 ball.
-5. **Game Over:** After losing all 3 balls, if the final score exceeds any high score on the local leaderboard, the player can enter their initials to save their record.
+4. **Pause:** Temporarily suspend gameplay (freezing all physics calculations, ball coordinates, and timers) and display the **Pause Menu Overlay** where the player can resume, adjust settings, or return to the Main Menu.
+5. **Drain:** Let the ball fall past the baseline flippers into the drain. This costs 1 ball.
+6. **Game Over:** After losing all 3 balls, if the final score exceeds any high score on the local leaderboard, the player can enter their initials to save their record.
 
 ---
 
@@ -57,6 +58,7 @@ The game features a single, carefully tuned pinball table layout divided into di
 To make coordinate calculations and vector math straightforward, the table layout is designed using round numbers mapped under the `100 pixels = 1 meter` scale:
 
 * **Total Table Dimensions:** `20.0m` width by `30.0m` height = `2000` × `3000` pixels (composed of a `18.0m` play area width, a `2.0m` plunger lane width on the far right, and a unified table height).
+* **Game Presentation & Framing:** The entire single-table playfield remains fully visible on screen at all times to preserve standard arcade cabinet layout visibility.
 * **Play Area Center line:** Exactly `9.0m` = `900` pixels.
 * **Flipper Pivots:** Symmetrical placement flanking the center line:
   * **Left Flipper Pivot:** `x = 6.8m` = `680` pixels.
@@ -131,4 +133,23 @@ Points are awarded dynamically for striking targets or completing lanes:
 ## 8. Progression & Storage
 
 * **High Scores:** Tracks and saves local top 5 high scores (Score, Date, Initials).
+* **Settings & Inputs:** Stores customized keybindings and volume adjustment values (Master/Music/SFX channels).
 * **Save Location:** Persistent ConfigFile written directly to disk.
+
+---
+
+## 9. Audio & Sounds
+
+The audio direction uses low-latency, retro 8-bit chip synthesizers to reinforce the arcade visual aesthetic:
+
+* **Background Music:** Repeating low-tempo chiptune backtracking loop that plays globally, lowering in volume during Pause states.
+* **Sound Effects (Positional Audio):**
+  * **Bumper Rebound:** Crisp, high-pitched synthetic square-wave blip.
+  * **Slingshot Kicker:** Snappy, high-velocity retro snare noise pop.
+  * **Flipper Solenoid:** Deep, mechanical square-wave dual click (on press and release).
+  * **Plunger Coil Charge:** Ascending pitch sine-wave sweep during key-hold charge phase.
+  * **Plunger Coil Release:** Sharp, explosive noise sweep on launch.
+  * **Ramp Completion:** Bright, triumphant chime arpeggio.
+  * **Nudge Save:** Quick, double-pitch triangle blip.
+  * **Tilt State Warning:** Repeating warnings beeps accompanied by a low-pitched warning tone.
+  * **Game Over:** Descending, sad chiptune arpeggio ending in a flat noise signal.

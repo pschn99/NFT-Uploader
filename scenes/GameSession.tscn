@@ -1,0 +1,19 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/GameSession.gd" id="1_game_session_gd"]
+[ext_resource type="PackedScene" path="res://scenes/GameCamera.tscn" id="2_game_camera"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/PauseMenu.tscn" id="4_pause_menu"]
+[ext_resource type="PackedScene" path="res://scenes/Table.tscn" id="5_table"]
+
+[node name="GameSession" type="Node2D"]
+script = ExtResource("1_game_session_gd")
+
+[node name="Table" parent="." instance=ExtResource("5_table")]
+
+[node name="GameCamera" parent="." instance=ExtResource("2_game_camera")]
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("4_pause_menu")]
+visible = false

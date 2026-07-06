@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Bumper.gd" id="1_bumper_gd"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bumper"]
+radius = 40.0
+
+[node name="Bumper" type="StaticBody2D"]
+collision_layer = 8
+script = ExtResource("1_bumper_gd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bumper")
+
+[node name="FillPoly" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(40, 0, 34.6, 20, 20, 34.6, 0, 40, -20, 34.6, -34.6, 20, -40, 0, -34.6, -20, -20, -34.6, 0, -40, 20, -34.6, 34.6, -20)
+color = Color(1, 1, 1, 1)
+
+[node name="Outline" type="Line2D" parent="."]
+points = PackedVector2Array(40, 0, 34.6, 20, 20, 34.6, 0, 40, -20, 34.6, -34.6, 20, -40, 0, -34.6, -20, -20, -34.6, 0, -40, 20, -34.6, 34.6, -20, 40, 0)
+width = 4.0
+default_color = Color(1, 1, 1, 1)

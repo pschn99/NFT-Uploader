@@ -1,0 +1,124 @@
+[gd_scene load_steps=12 format=3 uid="uid://dgvskdpef12k8"]
+
+[ext_resource type="Script" path="res://scripts/plunger_spike.gd" id="1_plunger_gd"]
+[ext_resource type="Script" path="res://scripts/ball_spike.gd" id="2_ball_gd"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_o6g2t"]
+friction = 0.0
+bounce = 0.2
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ball"]
+radius = 15.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_launch"]
+size = Vector2(80, 80)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_w1"]
+a = Vector2(900, 600)
+b = Vector2(900, 2400)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_w2"]
+a = Vector2(1000, 0)
+b = Vector2(1000, 2600)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_w3"]
+a = Vector2(900, 2600)
+b = Vector2(1000, 2600)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_w4"]
+a = Vector2(1000, 300)
+b = Vector2(200, 500)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_w5"]
+a = Vector2(200, 500)
+b = Vector2(200, 2200)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_w6"]
+a = Vector2(200, 2200)
+b = Vector2(900, 2500)
+
+[node name="PlungerSpike" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1000, 1500)
+zoom = Vector2(0.5, 0.5)
+
+[node name="TableWalls" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape1" type="CollisionShape2D" parent="TableWalls"]
+shape = SubResource("SegmentShape2D_w1")
+
+[node name="Shape2" type="CollisionShape2D" parent="TableWalls"]
+shape = SubResource("SegmentShape2D_w2")
+
+[node name="Shape3" type="CollisionShape2D" parent="TableWalls"]
+shape = SubResource("SegmentShape2D_w3")
+
+[node name="Shape4" type="CollisionShape2D" parent="TableWalls"]
+shape = SubResource("SegmentShape2D_w4")
+
+[node name="Shape5" type="CollisionShape2D" parent="TableWalls"]
+shape = SubResource("SegmentShape2D_w5")
+
+[node name="Shape6" type="CollisionShape2D" parent="TableWalls"]
+shape = SubResource("SegmentShape2D_w6")
+
+[node name="VisualLines" type="Node2D" parent="."]
+
+[node name="Line1" type="Line2D" parent="VisualLines"]
+points = PackedVector2Array(900, 600, 900, 2400)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="Line2" type="Line2D" parent="VisualLines"]
+points = PackedVector2Array(900, 2600, 1000, 2600, 1000, 0)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="Line3" type="Line2D" parent="VisualLines"]
+points = PackedVector2Array(1000, 300, 200, 500, 200, 2200, 900, 2500)
+width = 6.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="Plunger" type="Node2D" parent="."]
+position = Vector2(950, 2520)
+script = ExtResource("1_plunger_gd")
+min_launch_speed = 300.0
+max_launch_speed = 2000.0
+max_charge_time = 1.0
+
+
+[node name="PlungerVisual" type="Line2D" parent="Plunger"]
+width = 15.0
+default_color = Color(1, 1, 1, 1)
+
+[node name="LaunchArea" type="Area2D" parent="Plunger"]
+position = Vector2(0, -30)
+collision_layer = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Plunger/LaunchArea"]
+shape = SubResource("RectangleShape2D_launch")
+
+[node name="Ball" type="RigidBody2D" parent="."]
+position = Vector2(950, 2400)
+collision_mask = 18
+physics_material_override = SubResource("PhysicsMaterial_o6g2t")
+continuous_cd = 2
+script = ExtResource("2_ball_gd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ball"]
+shape = SubResource("CircleShape2D_ball")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 600.0
+offset_bottom = 120.0
+theme_override_font_sizes/font_size = 24
+text = "PLUNGER SPIKE SANDBOX
+Hold 'Space' to charge plunger (visual retracts)
+Release 'Space' to launch the ball"

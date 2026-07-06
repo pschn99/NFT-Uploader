@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/Ball.gd" id="1_ball_gd"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball"]
+friction = 0.0
+bounce = 0.75
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ball"]
+radius = 15.0
+
+[node name="Ball" type="RigidBody2D"]
+collision_mask = 30
+physics_material_override = SubResource("PhysicsMaterial_ball")
+continuous_cd = 2
+max_contacts_reported = 4
+contact_monitor = true
+script = ExtResource("1_ball_gd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ball")
+
+[node name="Trail" type="Line2D" parent="."]
+width = 8.0
+default_color = Color(1, 1, 1, 1)

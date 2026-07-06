@@ -1,0 +1,96 @@
+[gd_scene load_steps=5 format=3 uid="uid://dp6b2n6wqb2pl"]
+
+[ext_resource type="Script" path="res://scripts/flipper_spike.gd" id="1_flipper_gd"]
+[ext_resource type="Script" path="res://scripts/ball_spike.gd" id="2_ball_gd"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_o6g2t"]
+friction = 0.0
+bounce = 0.5
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ball"]
+radius = 15.0
+
+[node name="FlipperSpike" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1000, 1500)
+zoom = Vector2(0.5, 0.5)
+
+[node name="LeftBorder" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="LeftBorder"]
+polygon = PackedVector2Array(-100, -100, 0, -100, 0, 2200, 680, 2500, 680, 3100, -100, 3100)
+
+[node name="Polygon2D" type="Polygon2D" parent="LeftBorder"]
+polygon = PackedVector2Array(-100, -100, 0, -100, 0, 2200, 680, 2500, 680, 3100, -100, 3100)
+
+[node name="RightBorder" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="RightBorder"]
+polygon = PackedVector2Array(1800, -100, 1900, -100, 1900, 3100, 1120, 3100, 1120, 2500, 1800, 2200)
+
+[node name="Polygon2D" type="Polygon2D" parent="RightBorder"]
+polygon = PackedVector2Array(1800, -100, 1900, -100, 1900, 3100, 1120, 3100, 1120, 2500, 1800, 2200)
+
+[node name="TopBorder" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="TopBorder"]
+polygon = PackedVector2Array(-100, -100, 1900, -100, 1900, 0, -100, 0)
+
+[node name="Polygon2D" type="Polygon2D" parent="TopBorder"]
+polygon = PackedVector2Array(-100, -100, 1900, -100, 1900, 0, -100, 0)
+
+[node name="FlipperLeft" type="AnimatableBody2D" parent="."]
+position = Vector2(680, 2500)
+collision_layer = 4
+script = ExtResource("1_flipper_gd")
+rest_angle_deg = 30.0
+active_angle_deg = -30.0
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="FlipperLeft"]
+polygon = PackedVector2Array(0, -20, 160, -10, 160, 10, 0, 20)
+
+[node name="Polygon2D" type="Polygon2D" parent="FlipperLeft"]
+polygon = PackedVector2Array(0, -20, 160, -10, 160, 10, 0, 20)
+
+[node name="FlipperRight" type="AnimatableBody2D" parent="."]
+position = Vector2(1120, 2500)
+collision_layer = 4
+script = ExtResource("1_flipper_gd")
+is_right = true
+rest_angle_deg = -30.0
+active_angle_deg = 30.0
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="FlipperRight"]
+polygon = PackedVector2Array(0, -20, -160, -10, -160, 10, 0, 20)
+
+[node name="Polygon2D" type="Polygon2D" parent="FlipperRight"]
+polygon = PackedVector2Array(0, -20, -160, -10, -160, 10, 0, 20)
+
+[node name="Ball" type="RigidBody2D" parent="."]
+position = Vector2(900, 1000)
+collision_mask = 6
+physics_material_override = SubResource("PhysicsMaterial_o6g2t")
+continuous_cd = 2
+script = ExtResource("2_ball_gd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ball"]
+shape = SubResource("CircleShape2D_ball")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 500.0
+offset_bottom = 120.0
+theme_override_font_sizes/font_size = 24
+text = "FLIPPER SPIKE SANDBOX
+Press 'Z' or Left Arrow for Left Flipper
+Press 'X' or Right Arrow for Right Flipper"

@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/RolloverLane.gd" id="1_rollover_gd"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lane"]
+size = Vector2(60, 20)
+
+[node name="RolloverLane" type="Area2D"]
+collision_layer = 16
+script = ExtResource("1_rollover_gd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_lane")
+
+[node name="Light" type="Polygon2D" parent="."]
+position = Vector2(0, -25)
+polygon = PackedVector2Array(8, 0, 6, 6, 0, 8, -6, 6, -8, 0, -6, -6, 0, -8, 6, -6)
+color = Color(1, 1, 1, 1)
+
+[node name="Line" type="Line2D" parent="."]
+points = PackedVector2Array(-30, 0, 30, 0)
+width = 4.0
+default_color = Color(1, 1, 1, 1)

@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main_gd"]
+[ext_resource type="PackedScene" path="res://scenes/StartMenu.tscn" id="2_start_menu"]
+[ext_resource type="PackedScene" path="res://scenes/InitialsEntry.tscn" id="3_initials_entry"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main_gd")
+
+[node name="StartMenu" parent="." instance=ExtResource("2_start_menu")]
+
+[node name="InitialsEntry" parent="." instance=ExtResource("3_initials_entry")]
+visible = false

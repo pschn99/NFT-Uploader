@@ -1,43 +1,50 @@
-# Pinballzzz Project Design Rules & Guidelines
+# Pinballzzz Project Design Rules & Guidelines (Godot 4.x)
 
-This document contains lessons learned, critical configurations, and architectural patterns established during the physics and sandbox prototyping phases.
+This document outlines the authoritative constraints and gotchas that coding agents MUST follow when implementing the Godot 4 transition of the Pinballzzz arcade game.
 
-## 1. Rapier Physics Quirks & Solutions
+---
 
-### A. Dynamic Body Sleep (Flipper Unresponsiveness)
-- **Problem**: When a dynamic rigid body is resting and no external forces act on it, the Rapier solver puts it to sleep to conserve CPU. Modifying Revolute Joint motor parameters (such as `configureMotorVelocity` or `configureMotorPosition`) on a sleeping body **does not automatically wake it up**, causing controls to appear dead or unresponsive.
-- **Rule**: Always call `body.wakeUp()` immediately prior to modifying any joint motor settings.
+## 1. Physics Settings & Solver Constraints
 
-### B. Revolute Joint Limits
-- **Problem**: Setting `limitsEnabled` and `limits` on the construction `JointData` descriptor is ignored or discarded during impulse joint creation in some Rapier wrappers.
-- **Rule**: Explicitly configure limits on the instantiated joint:
-  ```typescript
-  joint.setLimits(minAngle, maxAngle);
-  ```
+* **Physics rate override:** Set `physics/common/physics_ticks_per_second = 240` and `physics/common/max_physics_steps_per_frame = 8` in `project.godot`. A hardware fallback configuration of `120` or `180` Hz is permitted on low-power devices, provided CCD is enabled.
+* **Physics thread safety:** `physics/2d/run_on_separate_thread` is configured to `true` by default, but fallback to `false` if platform-specific macOS/Linux GPU driver desyncs occur during QA.
+* **Continuous Collision Detection (CCD):** Enable shape/ray cast CCD on the `RigidBody2D` ball.
 
-### C. Flipper Kinematics (Solenoid vs. Position)
-- **Rule**: To simulate realistic pinball arcade flippers:
-  - **Active Swing (Soleneoid)**: Use velocity control `configureMotorVelocity(targetSpeed, velocityDamping)` with a high gain (e.g., `velocityDamping = 300.0` at `targetSpeed = 45.0` rad/s) to mimic high-current solenoid acceleration all the way to the limit.
-  - **Resting/Holding (Static)**: Use position control `configureMotorPosition(restingAngle, stiffness, damping)` with a stiff spring (e.g., `stiffness = 2000.0`, `damping = 50.0`) to keep the paddle locked at its limits without vibrating or sagging under gravity.
+---
 
-### D. Collision Tunneling & Substepping (240Hz)
-- **Problem**: High-speed collisions (e.g. ball falling fast meeting a fast flipper stroke) can pass through colliders in a single $1/60$s frame.
-- **Rule**: Run the Rapier world timestep at **`1 / 240` seconds** and execute the world step **4 times per frame** (substepping) inside the `PhysicsWorld.step()` method. This increases collision frequency by 4x and prevents tunneling without altering real-time speed.
+## 2. Programmatic Kinematic Flippers
 
-## 2. Sector Chunk Management & Tall Boundaries
-- **Problem**: Giant boundary walls spanning the entire tower height (e.g. $Y = 0 \to 520$) get unloaded by the chunk manager if it only evaluates the wall's center coordinate ($Y = 260$).
-- **Rule**: Check for viewport intersection using the wall's full height span:
-  ```typescript
-  const inRange = (wall.y - wall.hy <= maxY) && (wall.y + wall.hy >= minY);
-  ```
+* **No Physics Joints:** Do not use `PinJoint2D` or physical constraints. Flippers must be programmatically rotated `AnimatableBody2D` nodes inside `_physics_process`.
+* **Clamping:** Hard-clamp rotation limits in script, setting `angular_velocity` to `0` when limits are reached.
+* **Kinematics:** Active swing velocity target is `40.0` rad/s (solenoid sweep). Release damping should return the paddle quickly to rest.
+* **Anti-Ghosting Buffer:** Capture presses in `_unhandled_input(event)`, set latch `pending_strike = true`, clear latch in `_physics_process`, and enforce a minimum Active Swing duration of exactly `6` physics ticks (25ms) before accepting release inputs.
 
-## 3. Level Layout & Symmetry Constants
-- **Play Area Center**: Excluding the `2.23`m plunger lane on the right, the actual play area width is `18.25`m, meaning the play area center line is exactly **`9.125`m**.
-- **Flippers**: Symmetrical pivots around the center:
-  - Left Pivot: `x = 6.925`
-  - Right Pivot: `x = 11.325`
-  - Total length: `1.6`m, leaving a clean `1.2`m gap.
-- **Slopes**: Funnel slopes must be aligned flush to the flipper pivots:
-  - Left Slope Center: `x = 3.56`, width `hx = 3.56` (extends `0 \to 7.12`).
-  - Right Slope Center: `x = 14.69`, width `hx = 3.56` (extends `11.12 \to 18.25`).
-  - Vertical offset: Set slope centers `1.7`m higher than the flipper pivot baseline (e.g. Y_slope = 5.5, Y_flipper = 3.8) to create a smooth step-down of 21cm, ensuring the ball slides off slopes directly onto the paddles with no pockets.
+---
+
+## 3. Scale, Coordinates & Viewport
+
+* **Coordinate Scale:** `1 meter = 100 pixels` (`const PIXELS_PER_METER = 100.0`).
+* **Table Boundaries:** `2000` px wide by `3000` px high.
+* **Camera2D Setup:** Fixed viewport center `Vector2(1000, 1500)` with `zoom = Vector2(0.5, 0.5)` to fit a `1000×1500` px game viewport (scaled to `600×900` px default window). Drag margins set to 0. Viewport shake maps to `Camera2D.offset` trauma damping.
+* **Symmetry Constants:**
+  * Play Area Width: `1800` px. Plunger Lane Width: `200` px. Center Line: `900` px.
+  * Left Pivot: `x = 680` px. Right Pivot: `x = 1120` px. Flipper Gap: `120` px.
+  * Slopes: Left slope spans `0` to `680` px. Right slope spans `1120` to `1800` px.
+  * Vertical Offset: Slope centers are exactly `150` px higher than the flipper pivots baseline.
+
+---
+
+## 4. UI processing & Audio Fallbacks
+
+* **HUD processing mode:** HUD overlay node (`HUD.tscn`) must have `process_mode = PROCESS_MODE_ALWAYS` so scores/animations render cleanly when the game loop pauses.
+* **Pause overlays:** The Pause menu (`PauseMenu.tscn`) must have `process_mode = PROCESS_MODE_WHEN_PAUSED`.
+* **Audio fallbacks:** Positional SFX streams (.wav) and global BGM (.ogg) must verify path validity (using `FileAccess`) before loading. If resources are missing, fallback gracefully to silence without crashing.
+
+---
+
+## 5. ConfigFile Persistence & First-Launch
+
+* **Leaderboard Config:** Saved to `user://leaderboard.cfg`.
+* **Settings Config:** Custom bindings and volumes saved to `user://settings.cfg`.
+* **First-Launch Guard:** Always check `file_exists()` on boot. If config files are missing, initialize local directories with default placeholder scores (e.g. 5000, 4000, 3000, 2000, 1000) and standard keybindings to prevent application crashes.
+* **Version control:** Keep header version prefix `const SAVE_VERSION = 1` for migrations.

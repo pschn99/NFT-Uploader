@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_gate"]
+a = Vector2(0, -50)
+b = Vector2(0, 50)
+
+[node name="RampGate" type="Area2D"]
+collision_layer = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("SegmentShape2D_gate")
+
+[node name="VisualLine" type="Line2D" parent="."]
+points = PackedVector2Array(0, -50, 0, -25, 0, 25, 0, 50)
+width = 2.0
+default_color = Color(1, 1, 1, 0.4)
