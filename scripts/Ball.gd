@@ -5,7 +5,10 @@ extends RigidBody2D
 
 var trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 16
-const MAX_SPEED: float = 2500.0 # Clamp max speed to prevent tunneling (Issue M-1)
+const MAX_SPEED: float = 2500.0 # Clamp max speed to prevent physical tunneling
+
+# Shared trail gradient (M-1: allocated once, reused across all ball instances)
+static var _shared_trail_gradient: Gradient = null
 
 func _ready():
 	contact_monitor = true
@@ -18,11 +21,12 @@ func _ready():
 	trail.global_rotation = 0.0
 	trail.width = 8.0
 	
-	# Create a fading gradient for the retro vector look
-	var grad = Gradient.new()
-	grad.set_color(0, Color(1, 1, 1, 0))       # Fade out completely at tail
-	grad.set_color(1, Color(1, 1, 1, 1.0))     # Seamless white connection at ball
-	trail.gradient = grad
+	# Assign shared trail gradient (M-1: avoids per-instance allocation)
+	if _shared_trail_gradient == null:
+		_shared_trail_gradient = Gradient.new()
+		_shared_trail_gradient.set_color(0, Color(1, 1, 1, 0))
+		_shared_trail_gradient.set_color(1, Color(1, 1, 1, 1.0))
+	trail.gradient = _shared_trail_gradient
 
 func _draw():
 	# Render the dynamic ball visually as a 1-bit white circle
@@ -43,17 +47,14 @@ func _process(_delta: float):
 	trail.points = PackedVector2Array(trail_points)
 
 func _on_body_entered(body: Node2D):
-	# Prioritize custom hit logic for bumpers, slingshots, etc.
-	if body.has_method("hit"):
+	# Prioritize custom hit logic for bumpers, slingshots (H-3: group-verified)
+	if body.is_in_group("bumpers") or body.is_in_group("slingshots"):
 		body.hit(self)
 		return
 		
-	# Emit decoupled impact signals (TDD §1.3 / Issue 2)
+	# Emit decoupled impact signals (TDD §1.3)
 	var speed = linear_velocity.length()
-	Events.ball_impact.emit(speed)
+	Events.ball_impact.emit(speed, global_position)
 	
-	if body.name.begins_with("Flipper"):
-		# Flipper activation sound now routed via Events bus (Issue M-2)
-		Events.flipper_activated.emit(body.is_right)
-	else:
-		SoundController.play_sfx("wall_hit")
+	if not body.is_in_group("flippers"):
+		Events.wall_hit.emit(speed, global_position)

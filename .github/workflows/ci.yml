@@ -13,12 +13,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Cache Godot Binary
+      id: cache-godot
+      uses: actions/cache@v4
+      with:
+        path: ./godot
+        key: godot-4.7-stable-linux
+
     - name: Install Godot
+      if: steps.cache-godot.outputs.cache-hit != 'true'
       run: |
         sudo apt-get update && sudo apt-get install -y wget unzip
-        wget https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
-        unzip Godot_v4.3-stable_linux.x86_64.zip
-        mv Godot_v4.3-stable_linux.x86_64 godot
+        wget https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+        unzip Godot_v4.7-stable_linux.x86_64.zip
+        mv Godot_v4.7-stable_linux.x86_64 godot
         chmod +x godot
 
     - name: Run Project Verification

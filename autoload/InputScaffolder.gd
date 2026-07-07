@@ -14,7 +14,7 @@ func setup_inputs():
 		"pause_toggle": [KEY_ESCAPE]
 	}
 	
-	# Gamepad buttons mapping (GDD §7.1 / §7.2 / Issues 3 & 6)
+	# Gamepad buttons mapping (GDD §7.1 / §7.2)
 	var gamepad_buttons = {
 		"flipper_left": [JOY_BUTTON_LEFT_SHOULDER],
 		"flipper_right": [JOY_BUTTON_RIGHT_SHOULDER],
@@ -28,7 +28,7 @@ func setup_inputs():
 		"ui_right": [JOY_BUTTON_DPAD_RIGHT]
 	}
 	
-	# Gamepad axes mapping (GDD §7.1 / Issue 6)
+	# Gamepad axes mapping (GDD §7.1)
 	var gamepad_motions = {
 		"flipper_left": [{"axis": JOY_AXIS_TRIGGER_LEFT, "value": 0.5}],     # L2 trigger
 		"flipper_right": [{"axis": JOY_AXIS_TRIGGER_RIGHT, "value": 0.5}],   # R2 trigger

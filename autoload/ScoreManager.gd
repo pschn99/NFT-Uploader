@@ -27,7 +27,7 @@ func _ready():
 	load_leaderboard()
 	load_settings()
 	
-	# Connect to decoupled event bus (TDD §1.3 / Issues 4 & 9)
+	# Connect to decoupled event bus (TDD §1.3)
 	Events.bumper_hit.connect(_on_bumper_hit)
 	Events.slingshot_hit.connect(_on_slingshot_hit)
 	Events.rollover_triggered.connect(_on_rollover_triggered)
@@ -66,24 +66,37 @@ func use_ball() -> bool:
 	return balls_remaining > 0
 
 # --- Event Bus Handlers ---
-func _on_bumper_hit(score: int):
+func _on_bumper_hit(score: int, _pos: Vector2 = Vector2.ZERO):
 	add_score(score)
 
-func _on_slingshot_hit(score: int):
+func _on_slingshot_hit(score: int, _pos: Vector2 = Vector2.ZERO):
 	add_score(score)
 
-func _on_rollover_triggered(score: int):
+func _on_rollover_triggered(score: int, _pos: Vector2 = Vector2.ZERO):
 	add_score(score)
 
-func _on_ramp_completed(score: int):
+func _on_ramp_completed(score: int, mult_inc: float, _pos: Vector2 = Vector2.ZERO):
 	add_score(score)
-	increment_multiplier(1.0)
+	increment_multiplier(mult_inc)
 
 # --- Leaderboard Config Persistence ---
 func load_leaderboard():
 	var config = ConfigFile.new()
-	var err = config.load(LEADERBOARD_PATH)
 	
+	# First-Launch Guard: check file exists before loading (TDD §6)
+	if not FileAccess.file_exists(LEADERBOARD_PATH):
+		print("ScoreManager: No leaderboard file found. Initializing defaults...")
+		leaderboard_entries = [
+			{"initials": "PBL", "score": 5000},
+			{"initials": "ZZZ", "score": 4000},
+			{"initials": "ARC", "score": 3000},
+			{"initials": "VEC", "score": 2000},
+			{"initials": "ONE", "score": 1000}
+		]
+		save_leaderboard()
+		return
+		
+	var err = config.load(LEADERBOARD_PATH)
 	if err == OK:
 		var version = config.get_value("meta", "version", 1)
 		if version == SAVE_VERSION:
@@ -91,8 +104,8 @@ func load_leaderboard():
 			print("ScoreManager: Leaderboard loaded. Entry count: ", leaderboard_entries.size())
 			return
 			
-	# First-Launch or Version Mismatch: Initialize defaults
-	print("ScoreManager: Initializing default leaderboard entries...")
+	# Version Mismatch: Re-initialize defaults
+	print("ScoreManager: Leaderboard version mismatch. Re-initializing defaults...")
 	leaderboard_entries = [
 		{"initials": "PBL", "score": 5000},
 		{"initials": "ZZZ", "score": 4000},
@@ -117,7 +130,7 @@ func is_high_score(score: int) -> bool:
 	if leaderboard_entries.size() < 5:
 		return true
 	for entry in leaderboard_entries:
-		if score >= entry["score"]:
+		if score > entry["score"]:
 			return true
 	return false
 
@@ -147,19 +160,27 @@ func load_settings():
 		print("ScoreManager: Audio settings loaded (Master: ", master_volume, ")")
 		_apply_volumes()
 		
-		# Load custom keybindings if present
+		# Load custom keybindings if present (H-2 / GDD §8)
 		var actions = ["flipper_left", "flipper_right", "plunger_launch", "nudge_left", "nudge_right", "pause_toggle"]
 		for action in actions:
-			var saved_key = config.get_value("controls", action, -1)
-			if saved_key != -1:
-				var events = InputMap.action_get_events(action)
-				for ev in events:
-					if ev is InputEventKey:
-						InputMap.action_erase_event(action, ev)
-				var new_event = InputEventKey.new()
-				new_event.physical_keycode = saved_key
-				InputMap.action_add_event(action, new_event)
-				print("ScoreManager: Applied custom keybind for ", action, ": ", OS.get_keycode_string(saved_key))
+			if config.has_section_key("controls", action):
+				var val = config.get_value("controls", action)
+				if val is InputEvent:
+					var events = InputMap.action_get_events(action)
+					for ev in events:
+						if ev is InputEventKey or ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
+							InputMap.action_erase_event(action, ev)
+					InputMap.action_add_event(action, val)
+					print("ScoreManager: Applied custom serialized keybind for ", action)
+				elif val is int and val != -1 and val != 0:
+					var events = InputMap.action_get_events(action)
+					for ev in events:
+						if ev is InputEventKey:
+							InputMap.action_erase_event(action, ev)
+					var new_event = InputEventKey.new()
+					new_event.physical_keycode = val
+					InputMap.action_add_event(action, new_event)
+					print("ScoreManager: Applied custom keycode keybind for ", action, ": ", OS.get_keycode_string(val))
 		return
 		
 	print("ScoreManager: Initializing default settings...")
@@ -188,15 +209,15 @@ func update_volumes(master: float, music: float, sfx: float):
 	sfx_volume = sfx
 	save_settings()
 
-func save_keybinding(action_name: String, keycode: int):
+func save_keybinding(action_name: String, event: InputEvent):
 	var config = ConfigFile.new()
 	config.load(SETTINGS_PATH)
-	config.set_value("controls", action_name, keycode)
+	config.set_value("controls", action_name, event)
 	var err = config.save(SETTINGS_PATH)
 	if err != OK:
 		print("ScoreManager: Failed to save keybinding. error: ", err)
 	else:
-		print("ScoreManager: Saved custom keybind for ", action_name, ": ", OS.get_keycode_string(keycode))
+		print("ScoreManager: Saved custom keybind for ", action_name)
 
 func _apply_volumes():
 	_set_bus_vol("Master", master_volume)
@@ -210,6 +231,6 @@ func _set_bus_vol(bus_name: String, ratio: float):
 			AudioServer.set_bus_mute(bus_idx, true)
 		else:
 			AudioServer.set_bus_mute(bus_idx, false)
-			# Idiomatic volume db conversion using linear_to_db (Issue M2-18 / TD-8)
+			# Idiomatic volume db conversion using linear_to_db
 			var db = linear_to_db(ratio)
 			AudioServer.set_bus_volume_db(bus_idx, clamp(db, -80.0, 6.0))

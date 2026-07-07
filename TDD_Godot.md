@@ -256,15 +256,19 @@ The physics world enforces collision interactions using the following dedicated 
 To keep the game architecture highly decoupled, inter-system events use Godot's built-in **Signals**.
 
 ```gdscript
-signal ball_impact(velocity: float)
-signal bumper_hit(score_value: int)
-signal slingshot_hit(score_value: int)
-signal rollover_triggered(score_value: int)
-signal ramp_completed(score_value: int)
+signal ball_impact(velocity: float, position: Vector2)
+signal bumper_hit(score_value: int, position: Vector2)
+signal slingshot_hit(score_value: int, position: Vector2)
+signal rollover_triggered(score_value: int, position: Vector2)
+signal ramp_completed(score_value: int, multiplier_increase: float, position: Vector2)
 signal nudge_triggered(tilt_count: int)
 signal tilt_triggered()
 signal tilt_recovered()
+signal flipper_activated(is_right: bool, position: Vector2)
+signal ball_saved()
 ```
+
+The `position: Vector2` parameters carry the world-space coordinates of the event for positional audio playback (see §3.4). The `multiplier_increase` parameter on `ramp_completed` allows callers to customize the multiplier increment per ramp. `flipper_activated` fires on both solenoid press and release, as well as ball-to-flipper collision. `ball_saved` fires when a nudge earns points in the drain zone.
 
 ---
 

@@ -7,12 +7,16 @@ const MAX_PLAYERS = 8
 var bgm_player: AudioStreamPlayer = null
 var lpf_effect: AudioEffectLowPassFilter = null
 
+var was_paused: bool = false
+
 func _ready():
 	process_mode = PROCESS_MODE_ALWAYS
+	# Seed the global random number generator to make noise sounds organic (L-4)
+	randomize()
 	print("SoundController: Generating chiptune assets...")
 	_initialize_synth_sounds()
 	
-	# Create pool of players (TDD §3.4 / Issue 7c)
+	# Create pool of players (TDD §3.4)
 	for i in range(MAX_PLAYERS):
 		var p = AudioStreamPlayer2D.new()
 		add_child(p)
@@ -26,26 +30,30 @@ func _ready():
 		for p in active_players:
 			p.bus = "Master"
 			
-	# Connect decoupled global event signals (TDD §1.3 / Issues 4 & 9)
+	# Connect decoupled global event signals (TDD §1.3) with positional audio coordinates (M-3)
 	Events.ball_impact.connect(_on_ball_impact)
-	Events.bumper_hit.connect(func(_score): play_sfx("bumper"))
-	Events.slingshot_hit.connect(func(_score): play_sfx("slingshot"))
-	Events.rollover_triggered.connect(func(_score): play_sfx("nudge"))
-	Events.ramp_completed.connect(func(_score): play_sfx("ramp")) # Wire dedicated ramp SFX (Issue 3 recommendation)
+	Events.bumper_hit.connect(func(_score, pos): play_sfx("bumper", pos))
+	Events.slingshot_hit.connect(func(_score, pos): play_sfx("slingshot", pos))
+	Events.rollover_triggered.connect(func(_score, pos): play_sfx("rollover", pos)) # Wire dedicated rollover SFX (M-1)
+	Events.ramp_completed.connect(func(_score, _mult_inc, pos): play_sfx("ramp", pos))
 	Events.tilt_triggered.connect(func(): play_sfx("tilt_warning"))
-	Events.flipper_activated.connect(func(_is_right): play_sfx("flipper"))
+	Events.flipper_activated.connect(func(_is_right, pos): play_sfx("flipper", pos))
+	Events.wall_hit.connect(func(vel, pos): play_sfx("wall_hit", pos))
 	
 	_setup_low_pass_filter()
 	_start_bgm()
 	print("SoundController: Initialization complete.")
 
 func _process(delta: float):
-	# Dynamic low-pass and volume reduction during Pause (TDD §3.4 / Issues 5 & 14)
+	# Dynamic low-pass and volume reduction during Pause (TDD §3.4)
 	if bgm_player and bgm_player.playing:
 		var is_paused = get_tree().paused
-		var music_bus_idx = AudioServer.get_bus_index("Music")
-		if music_bus_idx != -1 and lpf_effect:
-			AudioServer.set_bus_effect_enabled(music_bus_idx, 0, is_paused)
+		# Only call AudioServer on state transition (L-3)
+		if is_paused != was_paused:
+			was_paused = is_paused
+			var music_bus_idx = AudioServer.get_bus_index("Music")
+			if music_bus_idx != -1 and lpf_effect:
+				AudioServer.set_bus_effect_enabled(music_bus_idx, 0, is_paused)
 		
 		# Muffle volume by 12dB when paused
 		var target_db = -12.0 if is_paused else 0.0
@@ -61,22 +69,23 @@ func _initialize_synth_sounds():
 	sounds["tilt_warning"] = generate_beep(220.0, 0.15, "square")
 	sounds["game_over"] = generate_sweep(400.0, 100.0, 0.8, "triangle")
 	
-	# Unique nudge double blip (Issue 4 recommendation)
+	# Unique nudge double blip
 	sounds["nudge"] = generate_double_blip(200.0, 400.0, 0.12)
 	
-	# Dedicated ramp completion rising sweep (Issue 3 recommendation)
+	# Dedicated ramp completion rising sweep
 	sounds["ramp"] = generate_sweep(600.0, 1200.0, 0.4, "sine")
 	
-	# Sad descending arpeggio for drain (Issue 7 & 9)
+	# Sad descending arpeggio for drain
 	sounds["drain"] = generate_sweep(250.0, 50.0, 0.8, "triangle")
 	
-	# Generic wall collision impact sound (TD-5)
+	# Generic wall collision impact sound
 	sounds["wall_hit"] = generate_beep(150.0, 0.05, "sine")
+	
+	# Dedicated rollover crisp square-wave blip (M-1)
+	sounds["rollover"] = generate_beep(800.0, 0.08, "square")
 
-func _on_ball_impact(velocity: float):
-	# Map impact speed to blip frequency and volume
-	if velocity > 100.0:
-		play_sfx("wall_hit")
+func _on_ball_impact(velocity: float, position: Vector2 = Vector2(1000, 1500)):
+	pass # wall_hit audio is now handled by the dedicated Events.wall_hit signal
 
 func play_sfx(sound_name: String, position: Vector2 = Vector2(1000, 1500)):
 	if not sounds.has(sound_name):
@@ -115,7 +124,7 @@ func _setup_low_pass_filter():
 		AudioServer.set_bus_effect_enabled(music_bus_idx, 0, false)
 
 func _start_bgm():
-	# Loopable retro chiptune BGM loop (GDD §9 / TDD §3.4 / Issue 5)
+	# Loopable retro chiptune BGM loop (GDD §9 / TDD §3.4)
 	var music_bus_idx = AudioServer.get_bus_index("Music")
 	bgm_player = AudioStreamPlayer.new()
 	add_child(bgm_player)

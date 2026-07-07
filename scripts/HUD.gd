@@ -15,9 +15,10 @@ func _ready():
 	ScoreManager.multiplier_changed.connect(_on_multiplier_changed)
 	ScoreManager.balls_changed.connect(_on_balls_changed)
 	
-	# Connect to Event bus for decoupled Tilt status warnings (GDD §4 / Issue 13)
+	# Connect to Event bus for decoupled Tilt status warnings (GDD §4)
 	Events.tilt_triggered.connect(_on_tilt_triggered)
 	Events.tilt_recovered.connect(_on_tilt_recovered)
+	Events.ball_saved.connect(_on_ball_saved)
 	
 	# Initialize HUD displays
 	_on_score_changed(ScoreManager.current_score)
@@ -28,7 +29,7 @@ func _ready():
 	tilt_label.visible = false
 
 func _process(delta: float):
-	# Safe, non-recursive frame-based tilt flashing (Issue 7f recommendation)
+	# Safe, non-recursive frame-based tilt flashing
 	if is_tilting:
 		flash_timer += delta
 		if flash_timer >= FLASH_INTERVAL:
@@ -69,3 +70,14 @@ func _on_tilt_triggered():
 func _on_tilt_recovered():
 	is_tilting = false
 	tilt_label.visible = false
+
+func _on_ball_saved():
+	# Flash alert for ball save (M-5)
+	multiplier_label.text = "BALL SAVED! +25"
+	multiplier_label.visible = true
+	var t = get_tree().create_timer(1.5)
+	t.timeout.connect(func():
+		# Only hide if it hasn't been overwritten by a real multiplier update
+		if multiplier_label.text == "BALL SAVED! +25":
+			multiplier_label.visible = false
+	)

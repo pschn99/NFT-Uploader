@@ -9,14 +9,14 @@ extends StaticBody2D
 var flash_tween: Tween = null
 
 func _ready():
+	add_to_group("bumpers")
 	fill_poly.visible = true
 
 func hit(ball: RigidBody2D):
-	# Decoupled signal emission (TDD §1.3 / Issue 2)
-	Events.bumper_hit.emit(score_value)
-	Events.ball_impact.emit(kick_speed)
+	# Decoupled signal emission (TDD §1.3)
+	Events.bumper_hit.emit(score_value, global_position)
 	
-	# Apply realistic rebound physics combining incoming speed & kick speed (Issue TD-4)
+	# Apply realistic rebound physics combining incoming speed & kick speed
 	var dir = (ball.global_position - global_position).normalized()
 	if dir == Vector2.ZERO:
 		dir = Vector2.UP # Fallback to prevent NaN

@@ -19,7 +19,7 @@ func _on_play_pressed():
 	print("Main: Starting game session...")
 	start_menu.visible = false
 	
-	# Initialize ScoreManager session values first (Issue 12)
+	# Initialize ScoreManager session values first
 	ScoreManager.reset_session()
 	
 	# Instantiate GameSession
@@ -29,6 +29,7 @@ func _on_play_pressed():
 	
 	# Connect to session completion events
 	active_session.game_completed.connect(_on_game_completed)
+	active_session.exit_to_menu.connect(_on_exit_to_menu)
 
 func _on_game_completed(final_score: int):
 	print("Main: Game session finished. Final score: ", final_score)
@@ -47,6 +48,13 @@ func _on_game_completed(final_score: int):
 	else:
 		# Return to start menu directly
 		_return_to_menu()
+
+func _on_exit_to_menu():
+	print("Main: Returning to menu from pause.")
+	if active_session != null:
+		active_session.queue_free()
+		active_session = null
+	_return_to_menu()
 
 func _on_initials_confirmed(initials: String):
 	print("Main: High score initials: ", initials)

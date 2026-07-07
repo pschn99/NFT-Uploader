@@ -42,7 +42,7 @@ func _ready():
 	else:
 		print("   Physics max steps verified at 8")
 		
-	# 3. Verify Default Window Override Dimensions (TDD §3.2 / Issue 4)
+	# 3. Verify Default Window Override Dimensions (TDD §3.2)
 	var width_override = ProjectSettings.get_setting("display/window/size/window_width_override")
 	var height_override = ProjectSettings.get_setting("display/window/size/window_height_override")
 	if width_override != 600 or height_override != 900:
@@ -82,17 +82,31 @@ func _ready():
 				success = false
 			else:
 				print("   Ball bounciness verified at ", bounce)
+			var friction = ball.physics_material_override.friction
+			if friction > 0.1:
+				print("❌ Ball friction is ", friction, ", which is too high (expected <= 0.1)!")
+				success = false
+			else:
+				print("   Ball friction verified at ", friction)
 				
-		# Verify ball collision mask (Issue 9 recommendation)
+		# Verify ball collision mask
 		if ball.collision_mask != 30:
 			print("❌ Ball has incorrect collision mask: ", ball.collision_mask, " (expected 30)!")
 			success = false
 		else:
 			print("   Ball collision mask verified at 30")
+			
+		# Verify ball CCD mode (TDD §4.5 / L-8)
+		if ball.continuous_cd != 2:
+			print("❌ Ball continuous_cd is ", ball.continuous_cd, " instead of 2 (CCD_MODE_CAST_SHAPE)!")
+			success = false
+		else:
+			print("   Ball continuous_cd verified at CAST_SHAPE")
+			
 		ball.free()
 		
-	# 6. Verify Events signal interface compliance (TDD §5 / Issue 1 & 9)
-	var expected_signals = ["ball_impact", "bumper_hit", "slingshot_hit", "rollover_triggered", "ramp_completed", "nudge_triggered", "tilt_triggered", "tilt_recovered"]
+	# 6. Verify Events signal interface compliance (TDD §5)
+	var expected_signals = ["ball_impact", "bumper_hit", "slingshot_hit", "rollover_triggered", "ramp_completed", "nudge_triggered", "tilt_triggered", "tilt_recovered", "flipper_activated", "ball_saved", "wall_hit"]
 	for sig in expected_signals:
 		if not Events.has_signal(sig):
 			print("❌ Events bus is missing required signal: ", sig)
@@ -148,7 +162,7 @@ func _ready():
 				else:
 					print("   Slingshot", side, " collision_mask verified")
 					
-		# Verify Plunger LaunchArea Active collision_mask (Issue 9 recommendation)
+		# Verify Plunger LaunchArea Active collision_mask
 		var plunger = table.get_node_or_null("Plunger")
 		if plunger:
 			var area = plunger.get_node_or_null("LaunchArea")

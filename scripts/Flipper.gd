@@ -14,8 +14,7 @@ var action_name: String = ""
 var pending_strike: bool = false
 var active_ticks: int = 0
 const MIN_ACTIVE_TICKS: int = 6
-var angular_velocity: float = 0.0
-var is_disabled: bool = false # Limp drop flag (Issue H-2)
+var is_disabled: bool = false # Limp drop flag
 
 func _ready():
 	add_to_group("flippers")
@@ -56,9 +55,9 @@ func _unhandled_input(event: InputEvent):
 		
 	if event.is_action_pressed(action_name):
 		pending_strike = true
-		Events.flipper_activated.emit(is_right) # Decoupled bus emission (Issue M-2)
+		Events.flipper_activated.emit(is_right, global_position) # Decoupled bus emission
 	elif event.is_action_released(action_name):
-		Events.flipper_activated.emit(is_right) # Decoupled bus emission (Issue M-2)
+		Events.flipper_activated.emit(is_right, global_position) # Decoupled bus emission
 
 func _physics_process(delta: float):
 	var want_active = false
@@ -79,8 +78,7 @@ func _physics_process(delta: float):
 	# Limp drop behaves by setting target to rest_angle when disabled
 	var target_angle = active_angle_rad if want_active else rest_angle_rad
 	
-	if rotation == target_angle:
-		angular_velocity = 0.0
+	if is_equal_approx(rotation, target_angle):
 		return
 		
 	var angle_diff = target_angle - rotation
@@ -88,8 +86,6 @@ func _physics_process(delta: float):
 	
 	if abs(angle_diff) <= step:
 		rotation = target_angle
-		angular_velocity = 0.0
 	else:
 		var dir = 1.0 if angle_diff > 0.0 else -1.0
-		angular_velocity = dir * flipper_speed
-		rotation += angular_velocity * delta
+		rotation += dir * flipper_speed * delta

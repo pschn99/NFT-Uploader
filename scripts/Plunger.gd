@@ -21,7 +21,7 @@ func _physics_process(delta: float):
 	if ball_in_plunger != null:
 		if Input.is_action_pressed("plunger_launch"):
 			if Input.is_action_just_pressed("plunger_launch"):
-				SoundController.play_sfx("plunger_charge")
+				SoundController.play_sfx("plunger_charge", global_position)
 			charging = true
 			hold_time = min(hold_time + delta, max_charge_time)
 			_update_visual(hold_time / max_charge_time)
@@ -47,7 +47,7 @@ func _launch_ball():
 	var v_launch = min_launch_speed + (max_launch_speed - min_launch_speed) * (charge_ratio * charge_ratio)
 	
 	ball_in_plunger.linear_velocity = Vector2(0, -v_launch)
-	SoundController.play_sfx("plunger_release")
+	SoundController.play_sfx("plunger_release", global_position)
 	print("Plunger launched ball! Hold time: ", hold_time, "s, Velocity: ", v_launch, " px/s")
 
 func _update_visual(ratio: float):

@@ -2,6 +2,7 @@ class_name GameSession
 extends Node2D
 
 signal game_completed(final_score: int)
+signal exit_to_menu()
 
 enum GameState {
 	MENU,
@@ -22,6 +23,7 @@ var tilt_count: int = 0
 var decay_timer: float = 0.0
 var active_ball: RigidBody2D = null
 var tilt_session_id: int = 0
+var drain_session_id: int = 0
 
 const BALL_SCENE: PackedScene = preload("res://scenes/Ball.tscn")
 
@@ -40,7 +42,7 @@ func _ready():
 	# Connect Table Drain area
 	drain_area.body_entered.connect(_on_ball_drained)
 	
-	# Connect ball impact signal to camera shake (TDD §1.3 / Issue 2 & 9)
+	# Connect ball impact signal to camera shake (TDD §1.3)
 	Events.ball_impact.connect(_on_events_ball_impact)
 	
 	# Initialize overlays
@@ -97,9 +99,10 @@ func _nudge_table(dir_sign: float):
 	# Apply nudge impulse to ball
 	active_ball.apply_central_impulse(Vector2(dir_sign * nudge_impulse, 0))
 	
-	# Award points for nudges performed when ball is in the drain zone (GDD §5 / Issue 3 / Finding H-3)
-	if active_ball.global_position.y >= Constants.DRAIN_THRESHOLD_Y and active_ball.global_position.x < 1800.0:
+	# Award points for nudges performed when ball is in the drain zone (GDD §5 / Finding H-3)
+	if active_ball.global_position.y >= Constants.DRAIN_NUDGE_MIN_Y and active_ball.global_position.x >= Constants.DRAIN_NUDGE_MIN_X and active_ball.global_position.x <= Constants.DRAIN_NUDGE_MAX_X:
 		ScoreManager.add_score(25)
+		Events.ball_saved.emit()
 		
 	add_camera_trauma(0.3)
 	SoundController.play_sfx("nudge")
@@ -163,19 +166,26 @@ func _on_ball_drained(body: Node2D):
 		# Clear multiplier on drain
 		ScoreManager.reset_multiplier()
 		
+		drain_session_id += 1
+		var active_id = drain_session_id
+		
 		if has_balls:
-			# Delay a bit and spawn next ball
 			get_tree().create_timer(1.0).timeout.connect(func():
+				if drain_session_id != active_id:
+					return
 				_spawn_ball()
 				tilt_count = 0
 				_set_flippers_enabled(true)
 				current_state = GameState.PLAYING
+				if not ScoreManager.scoring_enabled:
+					Events.tilt_recovered.emit()
 			)
 		else:
-			# Game over
 			current_state = GameState.GAME_OVER
 			SoundController.play_sfx("game_over")
 			get_tree().create_timer(1.0).timeout.connect(func():
+				if drain_session_id != active_id:
+					return
 				game_completed.emit(ScoreManager.current_score)
 			)
 
@@ -192,7 +202,7 @@ func _set_pause_state(paused: bool):
 	get_tree().paused = paused
 	pause_menu.visible = paused
 	
-	# Cache and restore state correctly (Issue 8)
+	# Cache and restore state correctly
 	if paused:
 		pre_pause_state = current_state
 		current_state = GameState.PAUSED
@@ -204,6 +214,6 @@ func _on_resume_pressed():
 	_set_pause_state(false)
 
 func _on_exit_pressed():
-	# Clean exit to main menu, unpause first
+	# Clean exit to main menu without high score check (M-3)
 	_set_pause_state(false)
-	game_completed.emit(ScoreManager.current_score)
+	exit_to_menu.emit()

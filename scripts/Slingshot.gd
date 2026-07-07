@@ -11,10 +11,11 @@ extends StaticBody2D
 var flash_tween: Tween = null
 
 func _ready():
+	add_to_group("slingshots")
 	fill_poly.visible = true
 	
 	if is_right:
-		# Auto-adjust normal direction symmetrically (Issue 3b)
+		# Auto-adjust normal direction symmetrically
 		kick_direction = Vector2(-kick_direction.x, kick_direction.y)
 			
 		# Programmatically mirror vertices for right flipper
@@ -36,13 +37,11 @@ func _ready():
 				child.points = new_points
 
 func hit(ball: RigidBody2D):
-	# Decoupled signal emission (TDD §1.3 / Issue 2 & 4)
-	Events.slingshot_hit.emit(score_value)
-	Events.ball_impact.emit(kick_speed)
+	# Decoupled signal emission (TDD §1.3)
+	Events.slingshot_hit.emit(score_value, global_position)
 	
-	# Apply realistic rebound physics combining reflected incoming speed & kick speed (Issue TD-4 / M-3)
-	var reflected = ball.linear_velocity.reflect(kick_direction.normalized())
-	var incoming_speed = reflected.length()
+	# Solenoid kick along the outward face normal combined with incoming speed component (Finding M-3)
+	var incoming_speed = ball.linear_velocity.length()
 	ball.linear_velocity = kick_direction.normalized() * (incoming_speed * 0.3 + kick_speed)
 	
 	# Safe tween-based visual hollow flash animation (remediation of L-3)
